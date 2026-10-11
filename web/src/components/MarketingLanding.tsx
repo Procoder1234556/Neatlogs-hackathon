@@ -3,27 +3,18 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import {
-  Zap,
-  ChevronRight,
+  ChevronDown,
+  Search,
+  Check,
+  ArrowRight,
+  Sparkles,
   ShieldCheck,
   TrendingUp,
-  DollarSign,
-  Database,
-  Layers,
-  Brain,
-  RefreshCw,
-  Activity,
+  Award,
+  Zap,
   Globe,
-  Sparkles,
-  CheckCircle2,
-  ArrowUpRight,
   Sliders,
-  Compass,
-  Star,
-  Users,
-  Search,
-  ExternalLink,
-  Info
+  DollarSign
 } from "lucide-react";
 
 interface MarketingLandingProps {
@@ -31,738 +22,843 @@ interface MarketingLandingProps {
 }
 
 export default function MarketingLanding({ onOpenDashboard }: MarketingLandingProps) {
-  const [activeTab, setActiveTab] = useState<"recruit" | "research">("recruit");
+  const [selectedTag, setSelectedTag] = useState<"devops" | "founders" | "ai">("devops");
 
   return (
-    <div
-      className="min-h-screen w-full font-sans antialiased overflow-x-hidden selection:bg-[#008080]/15 selection:text-[#0f172a]"
-      style={{
-        backgroundColor: "#FAF9F6",
-        color: "#1E293B",
-      }}
-    >
-      {/* ── TOP ANNOUNCEMENT BANNER (UserInterviews style pill) ── */}
-      <div className="w-full bg-[#14161C] text-white py-2.5 px-4 text-center text-xs tracking-wide font-medium flex items-center justify-center gap-2 border-b border-black/10">
-        <span className="inline-flex items-center gap-1.5 bg-[#008080]/20 text-[#2dd4bf] px-2.5 py-0.5 rounded-full text-[11px] font-semibold border border-[#008080]/40">
-          <span className="size-1.5 rounded-full bg-[#2dd4bf] animate-ping" />
-          Neatlogs Hackathon
-        </span>
-        <span className="text-zinc-300">
-          Autonomous B2B Pipeline powered by AWS Bedrock &amp; Crustdata with Zero-Hallucination Guardrails
-        </span>
-        <button
-          onClick={onOpenDashboard}
-          className="ml-2 underline font-semibold text-white hover:text-[#2dd4bf] transition-colors inline-flex items-center gap-0.5 cursor-pointer text-xs"
-        >
-          Try live interactive demo <ChevronRight className="size-3" />
-        </button>
-      </div>
+    <div className="min-h-screen w-full bg-[#FAF9F5] text-[#14161C] font-sans antialiased overflow-x-hidden selection:bg-[#0E5144]/20 selection:text-[#0E5144]">
+      
+      {/* ── 1. NAVBAR (Exact match to User Interviews header) ── */}
+      <header className="sticky top-0 z-50 bg-[#FAF9F5]/95 backdrop-blur-md border-b border-[#ECEAE3]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 h-20 flex items-center justify-between">
+          
+          {/* Left: Logo + Primary Nav */}
+          <div className="flex items-center gap-10">
+            {/* Logo */}
+            <div className="flex items-center gap-2 cursor-pointer" onClick={onOpenDashboard}>
+              <div className="size-8 rounded-full bg-[#0E5144] flex items-center justify-center text-white font-bold text-sm">
+                PF
+              </div>
+              <div className="flex flex-col">
+                <span className="font-serif text-xl font-bold tracking-tight text-[#14161C] leading-none">
+                  prospect forge
+                </span>
+                <span className="text-[9px] text-[#717684] tracking-widest uppercase font-mono mt-0.5">
+                  by Neatlogs
+                </span>
+              </div>
+            </div>
 
-      {/* ── STICKY EDITORIAL NAVIGATION ── */}
-      <header className="sticky top-0 z-50 bg-[#FAF9F6]/90 backdrop-blur-md border-b border-[#E5E5E0]">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
-          {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-2xl bg-[#14161C] flex items-center justify-center shadow-md">
-              <Zap className="size-5 text-[#2dd4bf] fill-[#2dd4bf]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-serif text-xl font-bold tracking-tight text-[#14161C]">
-                ProspectForge
-              </span>
-              <span className="text-[10px] tracking-widest text-[#717684] uppercase font-mono">
-                by Neatlogs &amp; Entire
-              </span>
-            </div>
+            {/* Dropdown Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[#475569]">
+              <div className="flex items-center gap-1 hover:text-[#14161C] cursor-pointer">
+                <span>Platform</span>
+                <ChevronDown className="size-3.5 text-[#94A3B8]" />
+              </div>
+              <div className="flex items-center gap-1 hover:text-[#14161C] cursor-pointer">
+                <span>Solutions</span>
+                <ChevronDown className="size-3.5 text-[#94A3B8]" />
+              </div>
+              <span className="hover:text-[#14161C] cursor-pointer">Pricing</span>
+              <div className="flex items-center gap-1 hover:text-[#14161C] cursor-pointer">
+                <span>Resources</span>
+                <ChevronDown className="size-3.5 text-[#94A3B8]" />
+              </div>
+              <div className="flex items-center gap-1 hover:text-[#14161C] cursor-pointer">
+                <span>Integrations</span>
+                <ChevronDown className="size-3.5 text-[#94A3B8]" />
+              </div>
+            </nav>
           </div>
 
-          {/* Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#475569]">
-            <a href="#how-it-works" className="hover:text-[#14161C] transition-colors">
-              How It Works
-            </a>
-            <a href="#pipeline" className="hover:text-[#14161C] transition-colors">
-              Agent Pipeline
-            </a>
-            <a href="#evidence" className="hover:text-[#14161C] transition-colors">
-              Zero Hallucinations
-            </a>
-            <a href="#economics" className="hover:text-[#14161C] transition-colors">
-              Unit Economics
-            </a>
-            <a href="#case-studies" className="hover:text-[#14161C] transition-colors">
-              Verified Cohorts
-            </a>
-          </nav>
-
-          {/* Action CTAs */}
-          <div className="flex items-center gap-3.5">
+          {/* Right: Actions */}
+          <div className="flex items-center gap-4">
             <button
               onClick={onOpenDashboard}
-              className="hidden sm:inline-flex items-center text-sm font-semibold text-[#14161C] hover:text-[#008080] transition-colors px-3 py-2 cursor-pointer"
+              className="text-sm font-semibold text-[#14161C] hover:text-[#0E5144] transition-colors cursor-pointer hidden sm:block"
             >
               Sign In
             </button>
             <button
+              id="nav-signup-free"
               onClick={onOpenDashboard}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-white bg-[#14161C] hover:bg-[#008080] px-5 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer"
+              className="bg-[#0E5144] hover:bg-[#0B3F35] text-white text-sm font-semibold px-6 py-2.5 rounded-full shadow-sm hover:shadow-md transition-all cursor-pointer"
             >
-              <span>Launch Demo</span>
-              <ArrowUpRight className="size-4" />
+              Sign up free
             </button>
           </div>
+
         </div>
       </header>
 
-      {/* ── HERO SECTION: Editorial Headline, Organic Doodles & Dual Illustrative Composition ── */}
-      <section className="relative max-w-7xl mx-auto px-6 md:px-12 pt-16 md:pt-24 pb-20">
-        {/* Editorial Pill */}
+
+      {/* ── 2. HERO: Exact User Interviews Layout with Doodles & Floating Avatars ── */}
+      <section className="relative max-w-7xl mx-auto px-6 lg:px-12 pt-12 pb-20">
+        
+        {/* Top pill link */}
         <div className="flex justify-center mb-6">
-          <div className="inline-flex items-center gap-2 bg-[#E6F4F1] border border-[#008080]/30 text-[#006666] text-xs font-semibold px-4 py-1.5 rounded-full shadow-xs">
-            <span className="size-2 rounded-full bg-[#008080]" />
-            <span>Autonomous B2B Prospecting &amp; Verified Outreach</span>
-            <span className="text-[#006666]/60">·</span>
-            <span className="font-mono text-[11px]">$1.15 / Verified Lead</span>
-          </div>
+          <button
+            onClick={onOpenDashboard}
+            className="inline-flex items-center gap-2 bg-white border border-[#E2DFD7] text-xs text-[#475569] font-medium px-4 py-1.5 rounded-full shadow-xs hover:border-[#0E5144] transition-colors cursor-pointer"
+          >
+            <span className="size-2 rounded-full bg-[#0E5144]" />
+            <span className="text-[#14161C] font-semibold">Meet ProspectForge:</span>
+            <span>The autonomous pipeline behind B2B growth.</span>
+            <span className="underline text-[#0E5144] font-semibold">Learn more →</span>
+          </button>
         </div>
 
-        {/* Serif Editorial Main Headline */}
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-[80px] font-normal tracking-[-0.03em] leading-[1.08] text-[#14161C] mb-6">
-            We find your next{" "}
-            <span className="italic font-serif font-light text-[#008080] underline decoration-[#008080]/30 underline-offset-8">
-              ten customers
-            </span>
+        {/* Center Headline */}
+        <div className="text-center max-w-3xl mx-auto relative z-10">
+          <h1 className="font-serif text-5xl sm:text-6xl lg:text-[76px] font-normal tracking-[-0.03em] leading-[1.05] text-[#14161C] mb-6">
+            We connect
             <br />
-            before breakfast.
+            researchers and
+            <br />
+            decision makers
           </h1>
-
-          <p className="text-lg md:text-xl text-[#475569] max-w-2xl mx-auto mb-10 leading-relaxed font-sans">
-            ProspectForge pairs Crustdata real-time hiring &amp; tech signals with AWS Bedrock reasoning
-            to discover, score, and draft fact-grounded outreach. Every claim is strictly cross-verified
-            against immutable facts.
+          <p className="text-base sm:text-lg text-[#555C68] max-w-lg mx-auto mb-8 font-normal leading-relaxed">
+            Get fast access to quality ICP leads or grow your pipeline autonomously with verified outreach.
           </p>
-
-          {/* Primary Action Button */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-            <button
-              id="hero-launch-primary"
-              onClick={onOpenDashboard}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-[#14161C] hover:bg-[#008080] text-white font-semibold text-base px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer group"
-            >
-              <span>Launch Free Pipeline Run</span>
-              <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
-              onClick={onOpenDashboard}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm font-semibold text-[#14161C] hover:text-[#008080] border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] px-6 py-4 rounded-full transition-colors cursor-pointer"
-            >
-              <Activity className="size-4 text-[#008080]" />
-              View Live Telemetry
-            </button>
-          </div>
-
-          <p className="text-xs text-[#717684] flex items-center justify-center gap-2">
-            <span>✓ No credit card required</span>
-            <span>·</span>
-            <span>✓ 3-minute autonomous execution</span>
-            <span>·</span>
-            <span>✓ CFO-auditable logs</span>
-          </p>
+          <button
+            id="hero-signup-free"
+            onClick={onOpenDashboard}
+            className="bg-[#0E5144] hover:bg-[#0B3F35] text-white text-base font-semibold px-8 py-3.5 rounded-full shadow-md hover:shadow-lg transition-all cursor-pointer"
+          >
+            Sign up free
+          </button>
         </div>
 
-        {/* ── HERO VISUAL COMPOSITION: Editorial Art Direction with Pixabay Photography & Organic Cards ── */}
-        <div className="mt-16 relative max-w-5xl mx-auto">
-          {/* Editorial frame with gentle border & subtle shadow */}
-          <div className="bg-white rounded-3xl border border-[#E5E5E0] shadow-xl p-4 sm:p-8 relative overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
-              
-              {/* Left Column: Pixabay Authentic Photography of Modern Engineer / Workspace */}
-              <div className="md:col-span-5 relative">
-                <div className="relative rounded-2xl overflow-hidden aspect-4/3 md:aspect-square border border-[#E2E8F0] shadow-md group">
-                  <Image
-                    src="/pixabay-hero-workspace.png"
-                    alt="Authentic engineering workstation and developer terminal from Pixabay"
-                    fill
-                    sizes="(max-width: 768px) 100vw, 400px"
-                    priority
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3 text-white text-xs">
-                    <div className="flex items-center gap-1.5 font-medium">
-                      <span className="size-2 rounded-full bg-[#2dd4bf]" />
-                      <span>Live autonomous run · Alex Chen</span>
-                    </div>
-                    <p className="text-[10px] text-zinc-300 font-mono mt-0.5">
-                      VP of Engineering · CloudScale Systems
-                    </p>
-                  </div>
-                </div>
-
-                {/* Hand-drawn style sticky annotation */}
-                <div className="absolute -bottom-4 -left-4 bg-[#FFF9E6] border border-[#E6D9A8] p-3 rounded-xl shadow-sm text-xs font-serif text-[#78590F] hidden sm:block max-w-[190px]">
-                  ✏️ &ldquo;Found 5 qualified leads in 2m 45s without manual search.&rdquo;
-                </div>
-              </div>
-
-              {/* Right Column: Live Telemetry & ICP Card (Restrained Teal + Editorial Typography) */}
-              <div className="md:col-span-7 flex flex-col gap-4">
-                <div className="flex items-center justify-between border-b border-[#F0F2F7] pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono uppercase tracking-wider text-[#717684]">
-                      Autonomous Target
-                    </span>
-                    <span className="bg-[#E6F4F1] text-[#006666] text-[11px] font-semibold px-2 py-0.5 rounded-md">
-                      Crustdata Verified
-                    </span>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                    <ShieldCheck className="size-3.5" /> 100% Fact-Checked
-                  </span>
-                </div>
-
-                <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-bold text-base text-[#14161C]">CloudScale Systems</h3>
-                      <p className="text-xs text-[#64748B] font-mono mt-0.5">cloudscalesystems.io · Seed ($3.5M)</p>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-extrabold text-[#008080] tabular-nums">94<span className="text-sm font-normal text-[#64748B]">/100</span></div>
-                      <span className="text-[10px] text-[#717684] uppercase font-semibold">ICP Fit</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
-                      <span className="text-[10px] text-[#717684] block font-mono">Headcount Velocity</span>
-                      <span className="font-bold text-emerald-700">+42% (6 months)</span>
-                    </div>
-                    <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
-                      <span className="text-[10px] text-[#717684] block font-mono">Key Hiring Signal</span>
-                      <span className="font-bold text-[#14161C]">Senior DevOps Engineer</span>
-                    </div>
-                  </div>
-
-                  {/* Fact-Checked Email Preview */}
-                  <div className="mt-3 bg-white p-3 rounded-lg border border-emerald-200">
-                    <div className="flex items-center justify-between mb-1 text-[11px]">
-                      <span className="font-bold text-[#14161C]">Subject: Quick question on CloudScale deployment guardrails</span>
-                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono font-bold">
-                        0 Hallucinations
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#475569] leading-relaxed line-clamp-2 italic font-serif">
-                      &ldquo;Hi Alex, saw that CloudScale grew engineering headcount by 42% over the last two quarters and is actively hiring senior DevOps engineers...&rdquo;
-                    </p>
-                  </div>
-                </div>
-
-                {/* Hand-drawn Koboyo Style Workflow Steps */}
-                <div className="flex items-center justify-between text-xs text-[#64748B] pt-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-5 rounded-full bg-[#14161C] text-white flex items-center justify-center text-[10px] font-bold">1</span>
-                    <span>Planner</span>
-                  </div>
-                  <span className="text-[#CBD5E1]">→</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-5 rounded-full bg-[#008080] text-white flex items-center justify-center text-[10px] font-bold">2</span>
-                    <span>Crustdata</span>
-                  </div>
-                  <span className="text-[#CBD5E1]">→</span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-5 rounded-full bg-[#008080] text-white flex items-center justify-center text-[10px] font-bold">3</span>
-                    <span>Bedrock</span>
-                  </div>
-                  <span className="text-[#CBD5E1]">→</span>
-                  <div className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                    <ShieldCheck className="size-4 text-emerald-600" />
-                    <span>Neatlogs Guard</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CLIENT TRUST BANNER (Matching Editorial UserInterviews / Appsmith reference) ── */}
-      <section className="border-y border-[#E5E5E0] bg-[#F5F5F0] py-10 px-6">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="font-serif italic text-sm md:text-base text-[#717684] mb-6">
-            Autonomous prospecting pipelines trusted by forward-thinking revenue and engineering teams
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 opacity-75 grayscale hover:grayscale-0 transition-all">
-            <span className="font-serif font-bold text-xl tracking-tight text-[#14161C]">Adobe</span>
-            <span className="font-sans font-extrabold text-xl tracking-tight text-[#14161C]">Spotify</span>
-            <span className="font-serif font-bold text-xl tracking-tight text-[#14161C]">Pinterest</span>
-            <span className="font-mono font-bold text-lg tracking-wider text-[#14161C]">INTUIT</span>
-            <span className="font-serif font-bold text-xl tracking-tight text-[#14161C]">NN/g</span>
-            <span className="font-sans font-bold text-xl tracking-tight text-[#14161C]">Amazon</span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── METRIC STATS ROW (Tactile White Cards & Tabular Numbers) ── */}
-      <section id="economics" className="max-w-6xl mx-auto px-6 md:px-12 py-20">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <h2 className="font-serif text-3xl md:text-4xl text-[#14161C] mb-3">
-            Real unit economics, not AI hand-waving
-          </h2>
-          <p className="text-sm text-[#64748B]">
-            Computed live from authentic Crustdata API credit burn and Bedrock token consumption.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-2xl p-6 border border-[#E5E5E0] shadow-sm flex flex-col gap-1 hover:border-[#008080] transition-colors">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#717684]">
-              Cost Per Lead
-            </span>
-            <span className="text-4xl font-extrabold text-[#14161C] tabular-nums mt-1">
-              $1<span className="text-2xl font-normal text-[#64748B]">.15</span>
-            </span>
-            <span className="text-xs text-emerald-700 font-semibold mt-1 flex items-center gap-1">
-              <TrendingUp className="size-3" /> vs $45 human SDR
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-[#E5E5E0] shadow-sm flex flex-col gap-1 hover:border-[#008080] transition-colors">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#717684]">
-              Claim Accuracy
-            </span>
-            <span className="text-4xl font-extrabold text-[#008080] tabular-nums mt-1">
-              100<span className="text-2xl font-normal">%</span>
-            </span>
-            <span className="text-xs text-[#717684] mt-1 flex items-center gap-1">
-              <ShieldCheck className="size-3 text-emerald-600" /> 0 ungrounded claims
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-[#E5E5E0] shadow-sm flex flex-col gap-1 hover:border-[#008080] transition-colors">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#717684]">
-              Average ICP Fit
-            </span>
-            <span className="text-4xl font-extrabold text-[#14161C] tabular-nums mt-1">
-              92<span className="text-2xl font-normal text-[#64748B]">/100</span>
-            </span>
-            <span className="text-xs text-[#717684] mt-1">
-              Vector rank across 4 dimensions
-            </span>
-          </div>
-
-          <div className="bg-white rounded-2xl p-6 border border-[#E5E5E0] shadow-sm flex flex-col gap-1 hover:border-[#008080] transition-colors">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-[#717684]">
-              Execution Time
-            </span>
-            <span className="text-4xl font-extrabold text-[#14161C] tabular-nums mt-1">
-              &lt;3<span className="text-2xl font-normal text-[#64748B]"> min</span>
-            </span>
-            <span className="text-xs text-emerald-700 font-semibold mt-1 flex items-center gap-1">
-              <Zap className="size-3 fill-emerald-600 text-emerald-600" /> Fully autonomous
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* ── TWO-COLUMN PLATFORM CARDS (UserInterviews style: recruit vs research) ── */}
-      <section id="how-it-works" className="max-w-6xl mx-auto px-6 md:px-12 py-10">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="font-serif text-3xl md:text-4xl text-[#14161C] mb-3">
-            Two specialized modes. One coherent engine.
-          </h2>
-          <p className="text-sm text-[#64748B]">
-            Whether discovering new seed-stage accounts or mapping existing enterprise accounts.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Card 1: Autonomous Prospecting */}
-          <div className="bg-white rounded-3xl p-8 border border-[#E5E5E0] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-            <div>
-              <div className="size-12 rounded-2xl bg-[#E6F4F1] flex items-center justify-center text-[#008080] mb-6">
-                <Brain className="size-6" />
-              </div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-[#008080] font-bold">
-                01 · Autonomous Discovery
-              </span>
-              <h3 className="font-serif text-2xl text-[#14161C] mt-1 mb-3">
-                Find qualified decision-makers, fast
-              </h3>
-              <p className="text-sm text-[#64748B] leading-relaxed mb-6">
-                Define criteria in plain English. The agent translates goals into multi-tiered Crustdata queries,
-                retrieving real founders and engineering leaders actively growing teams.
-              </p>
-              <ul className="space-y-2.5 text-xs text-[#334155] mb-8 font-medium">
-                <li className="flex items-center gap-2">
-                  <span className="text-[#008080] font-bold">✓</span>
-                  <span>Target professionals and engineering leads in any niche</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#008080] font-bold">✓</span>
-                  <span>Autonomous recovery ladder if initial search yields 0 matches</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#008080] font-bold">✓</span>
-                  <span>Real-time headcount velocity &amp; technographic detection</span>
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={onOpenDashboard}
-              className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-[#14161C] bg-[#F5F5F0] hover:bg-[#14161C] hover:text-white py-3 px-6 rounded-xl transition-all cursor-pointer"
-            >
-              <span>Explore Discovery Engine</span>
-              <ArrowUpRight className="size-4" />
-            </button>
-          </div>
-
-          {/* Card 2: Verified Outreach Guardrail */}
-          <div className="bg-white rounded-3xl p-8 border border-[#E5E5E0] shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-            <div>
-              <div className="size-12 rounded-2xl bg-[#F0FDF4] flex items-center justify-center text-emerald-700 mb-6">
-                <ShieldCheck className="size-6" />
-              </div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-emerald-700 font-bold">
-                02 · Fact-Grounded Synthesis
-              </span>
-              <h3 className="font-serif text-2xl text-[#14161C] mt-1 mb-3">
-                Outreach without embarrassing hallucinations
-              </h3>
-              <p className="text-sm text-[#64748B] leading-relaxed mb-6">
-                Generic AI emails hallucinate mutual connections and made-up company milestones.
-                ProspectForge audits every sentence against stored firmographic facts before sending.
-              </p>
-              <ul className="space-y-2.5 text-xs text-[#334155] mb-8 font-medium">
-                <li className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>100% ground-truth claims verified per email</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Automated citation tracing (Crustdata / job_openings)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-emerald-600 font-bold">✓</span>
-                  <span>Human-in-the-loop approval card before final handoff</span>
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={onOpenDashboard}
-              className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-[#14161C] bg-[#F5F5F0] hover:bg-[#14161C] hover:text-white py-3 px-6 rounded-xl transition-all cursor-pointer"
-            >
-              <span>Explore Fact Verifier</span>
-              <ArrowUpRight className="size-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5-STEP AUTONOMOUS PIPELINE: Elegant Horizontal Stepper ── */}
-      <section id="pipeline" className="max-w-6xl mx-auto px-6 md:px-12 py-20">
-        <div className="bg-white rounded-3xl border border-[#E5E5E0] p-8 md:p-12 shadow-sm">
-          <div className="max-w-2xl mb-12">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#008080] font-bold">
-              Autonomous Architecture
-            </span>
-            <h2 className="font-serif text-3xl md:text-4xl text-[#14161C] mt-1 mb-3">
-              How the 5-agent pipeline executes
-            </h2>
-            <p className="text-sm text-[#64748B]">
-              From an ambiguous plain-text goal to verified executive outreach in 165 seconds.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {[
-              {
-                step: "01",
-                name: "Planner Agent",
-                tool: "Bedrock.planner",
-                desc: "Parses ICP goals into firmographic parameters and scoring criteria.",
-                badge: "Synthesis"
-              },
-              {
-                step: "02",
-                name: "Researcher",
-                tool: "Crustdata.search",
-                desc: "Discovers companies matching headcount growth and tech stack.",
-                badge: "Discovery"
-              },
-              {
-                step: "03",
-                name: "Recovery Ladder",
-                tool: "Filter Widener",
-                desc: "Automatically widens criteria if search results hit zero.",
-                badge: "Self-Healing"
-              },
-              {
-                step: "04",
-                name: "Enricher & Scorer",
-                tool: "Crustdata.person",
-                desc: "Maps primary decision makers and vector ranks 0–100 fit score.",
-                badge: "Executive Map"
-              },
-              {
-                step: "05",
-                name: "Neatlogs Verifier",
-                tool: "Anti-Hallucination",
-                desc: "Audits every claim against ground truth before output delivery.",
-                badge: "Guardrail"
-              }
-            ].map((s, idx) => (
-              <div
-                key={s.step}
-                className="bg-[#FAF9F6] border border-[#E5E5E0] rounded-2xl p-5 flex flex-col justify-between hover:border-[#008080] transition-colors"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-mono text-xs font-bold text-[#717684]">{s.step}</span>
-                    <span className="text-[10px] font-mono bg-white border border-[#E5E5E0] px-2 py-0.5 rounded text-[#14161C]">
-                      {s.badge}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-sm text-[#14161C] mb-1">{s.name}</h4>
-                  <p className="text-xs text-[#64748B] leading-relaxed mb-4">{s.desc}</p>
-                </div>
-                <div className="text-[10px] font-mono text-[#008080] bg-[#E6F4F1] px-2 py-1 rounded truncate">
-                  {s.tool}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── PHOTO FEATURE SHOWCASE (PIXABAY COLLABORATION & RESEARCH) ── */}
-      <section id="evidence" className="max-w-6xl mx-auto px-6 md:px-12 py-10">
-        <div className="bg-[#14161C] text-white rounded-3xl p-8 md:p-14 overflow-hidden relative">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+        {/* ── KOBYOYO DOODLES & PIXABAY FLOATING AVATARS ── */}
+        
+        {/* Top Left: Researcher Persona with Pixabay Avatar */}
+        <div className="hidden md:block absolute top-12 left-6 lg:left-12 max-w-[240px]">
+          {/* Hand-drawn SVG doodle frame */}
+          <div className="relative">
+            <svg className="w-52 h-48 text-[#14161C]" viewBox="0 0 200 180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M 30,130 C 20,90 25,50 60,35 C 90,20 130,25 150,55 C 165,80 155,130 130,150 C 95,170 45,160 30,130 Z" strokeDasharray="3 3" opacity="0.4" />
+              {/* Hand-drawn sparkle marks */}
+              <path d="M 170,30 L 170,45 M 162,37 L 178,37" strokeWidth="2.5" />
+              <path d="M 20,40 L 20,50 M 15,45 L 25,45" strokeWidth="2" />
+            </svg>
             
-            <div className="md:col-span-7">
-              <span className="text-xs font-mono uppercase tracking-widest text-[#2dd4bf] font-bold">
-                CFO &amp; Engineering Trust
-              </span>
-              <h2 className="font-serif text-3xl md:text-5xl font-normal tracking-tight text-white mt-2 mb-6">
-                Total observability over every token, credit, and decision.
-              </h2>
-              <p className="text-[#94A3B8] text-sm md:text-base leading-relaxed mb-8">
-                Neatlogs records every span, model call, and retry event in real time. If a provider
-                fails or a search stalls, the recovery engine triggers without developer intervention.
-              </p>
+            {/* Real Pixabay Avatar 1 */}
+            <div className="absolute top-8 left-8 size-20 rounded-full overflow-hidden border-2 border-white shadow-lg">
+              <Image
+                src="/pixabay-avatar-1.jpg"
+                alt="Research Specialist Lead from Pixabay"
+                fill
+                sizes="80px"
+                priority
+                className="object-cover"
+              />
+            </div>
+            
+            <div className="absolute -bottom-2 left-6 bg-white border border-[#E5E5E0] px-3 py-1 rounded-full shadow-xs text-[11px] font-semibold text-[#14161C] flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-emerald-500" />
+              <span>Alex · DevOps Lead</span>
+            </div>
+          </div>
+        </div>
 
-              <div className="grid grid-cols-2 gap-4 text-xs font-mono text-zinc-300">
-                <div className="border border-zinc-800 bg-zinc-900/60 p-3.5 rounded-xl">
-                  <span className="text-zinc-500 block text-[10px]">RECOVERY EVENT</span>
-                  <span className="text-[#2dd4bf] font-bold">Filter Widening (10..100)</span>
-                </div>
-                <div className="border border-zinc-800 bg-zinc-900/60 p-3.5 rounded-xl">
-                  <span className="text-zinc-500 block text-[10px]">AVG LATENCY</span>
-                  <span className="text-white font-bold">320ms / Tool Span</span>
-                </div>
-              </div>
+        {/* Top Right: Workspace Folder Doodle + Pixabay Avatar 2 */}
+        <div className="hidden md:block absolute top-10 right-6 lg:right-12 max-w-[240px]">
+          <div className="relative">
+            <svg className="w-56 h-48 text-[#14161C]" viewBox="0 0 200 180" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {/* Folder doodle */}
+              <path d="M 40,70 L 70,70 L 85,85 L 160,85 L 160,150 L 40,150 Z" />
+              <path d="M 50,50 L 90,30 L 130,50" opacity="0.4" />
+              {/* Curved arrows & squiggles */}
+              <path d="M 140,20 C 160,15 175,30 180,50" strokeWidth="1.5" />
+            </svg>
+
+            {/* Real Pixabay Avatar 2 */}
+            <div className="absolute top-6 left-12 size-18 rounded-full overflow-hidden border-2 border-white shadow-lg">
+              <Image
+                src="/pixabay-avatar-2.jpg"
+                alt="VP of Engineering from Pixabay"
+                fill
+                sizes="72px"
+                priority
+                className="object-cover"
+              />
             </div>
 
-            {/* Pixabay Authentic Collaborative Network Photography */}
-            <div className="md:col-span-5 relative">
-              <div className="relative rounded-2xl overflow-hidden aspect-square border border-zinc-700 shadow-2xl">
-                <Image
-                  src="/pixabay-feature-network.jpg"
-                  alt="High-resolution network landscape and data architecture from Pixabay"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 400px"
-                  loading="lazy"
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4 text-xs text-white">
-                  <div className="font-mono text-[10px] text-[#2dd4bf]">NEATLOGS SPAN #NL-8842</div>
-                  <p className="font-serif text-sm">Crustdata → Bedrock Converse → Neatlogs Audit</p>
-                </div>
-              </div>
+            <div className="absolute bottom-6 right-2 bg-white border border-[#E5E5E0] px-3 py-1 rounded-full shadow-xs text-[11px] font-semibold text-[#14161C] flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-[#0E5144]" />
+              <span>Elena · Platform Head</span>
             </div>
+          </div>
+        </div>
 
+        {/* Bottom Left: Integrations Stack Doodle + Pixabay Avatar 3 */}
+        <div className="hidden lg:block absolute bottom-4 left-16 max-w-[200px]">
+          <div className="relative">
+            <svg className="w-44 h-40 text-[#14161C]" viewBox="0 0 160 140" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="20" y="40" width="35" height="35" rx="8" strokeWidth="1.5" />
+              <circle cx="95" cy="55" r="16" strokeWidth="1.5" />
+              <path d="M 40,85 C 60,110 100,105 120,80" strokeDasharray="4 4" />
+            </svg>
+            <div className="absolute top-2 left-6 size-16 rounded-full overflow-hidden border-2 border-white shadow-md">
+              <Image
+                src="/pixabay-avatar-3.jpg"
+                alt="Growth Ops Specialist from Pixabay"
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Right: Laptop Doodle + Pixabay Avatar 4 */}
+        <div className="hidden lg:block absolute bottom-4 right-16 max-w-[200px]">
+          <div className="relative">
+            <svg className="w-48 h-40 text-[#14161C]" viewBox="0 0 180 140" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M 40,70 L 140,70 L 120,110 L 20,110 Z" />
+              <path d="M 40,70 L 40,40 L 140,40 L 140,70" />
+              <circle cx="90" cy="55" r="5" fill="currentColor" />
+            </svg>
+            <div className="absolute top-4 left-10 size-16 rounded-full overflow-hidden border-2 border-white shadow-md">
+              <Image
+                src="/pixabay-avatar-4.jpg"
+                alt="Product Researcher from Pixabay"
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      {/* ── 3. LOGO TICKER: "Researchers at these companies gain insights faster" (Exact Reference Box) ── */}
+      <section className="max-w-5xl mx-auto px-6 py-12">
+        <div className="text-center mb-5">
+          <p className="font-serif italic text-lg sm:text-xl text-[#14161C]">
+            Researchers at these companies gain insights <span className="font-serif italic font-bold">faster</span>
+          </p>
+        </div>
+
+        {/* The clean outlined card with triple-dot header detail like reference */}
+        <div className="bg-white rounded-2xl border-2 border-[#14161C] p-6 shadow-xs relative">
+          {/* Triple dot illustration on top left border */}
+          <div className="absolute -top-3 left-6 bg-white px-2 flex items-center gap-1">
+            <span className="size-1.5 rounded-full bg-[#14161C]" />
+            <span className="size-1.5 rounded-full bg-[#14161C]" />
+            <span className="size-1.5 rounded-full bg-[#14161C]" />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-around gap-8 text-[#14161C]">
+            <span className="font-serif font-bold text-2xl tracking-tight">Adobe</span>
+            <span className="font-sans font-extrabold text-2xl tracking-tight">Spotify</span>
+            <span className="font-serif font-bold text-2xl tracking-tight">Pinterest</span>
+            <span className="font-mono font-bold text-xl tracking-wider">INTUIT</span>
+            <span className="font-serif font-bold text-2xl tracking-tight">NN/g</span>
+            <span className="font-sans font-bold text-2xl tracking-tight">amazon</span>
           </div>
         </div>
       </section>
 
-      {/* ── VERIFIED COHORTS & TESTIMONIALS (Editorial Cards) ── */}
-      <section id="case-studies" className="max-w-6xl mx-auto px-6 md:px-12 py-20">
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <h2 className="font-serif text-3xl md:text-4xl text-[#14161C] mb-3">
-            What engineering and sales leaders say
+
+      {/* ── 4. TWO-PILLAR PLATFORM SECTION: "The research recruiting and insights platform" ── */}
+      <section className="max-w-6xl mx-auto px-6 lg:px-12 py-16">
+        
+        {/* Title & Filter Pills */}
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <h2 className="font-serif text-3xl sm:text-5xl font-normal text-[#14161C] mb-4">
+            The research recruiting and insights platform
           </h2>
-          <p className="text-sm text-[#64748B]">
-            Authentic feedback from real operators running ProspectForge in production.
+          <p className="text-sm text-[#555C68] mb-6">
+            Find participants from our panel, your panel, or both.
           </p>
+
+          <div className="inline-flex items-center gap-2 bg-[#EEECE4] p-1 rounded-full text-xs font-semibold">
+            <span className="text-[#717684] px-3">For</span>
+            <button
+              onClick={() => setSelectedTag("devops")}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                selectedTag === "devops" ? "bg-[#14161C] text-white shadow-xs" : "text-[#555C68] hover:text-[#14161C]"
+              }`}
+            >
+              user research
+            </button>
+            <button
+              onClick={() => setSelectedTag("founders")}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                selectedTag === "founders" ? "bg-[#14161C] text-white shadow-xs" : "text-[#555C68] hover:text-[#14161C]"
+              }`}
+            >
+              market research
+            </button>
+            <button
+              onClick={() => setSelectedTag("ai")}
+              className={`px-4 py-1.5 rounded-full transition-all cursor-pointer ${
+                selectedTag === "ai" ? "bg-[#14161C] text-white shadow-xs" : "text-[#555C68] hover:text-[#14161C]"
+              }`}
+            >
+              AI training
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              quote: "A recruitment and outbound game changer. Solving the biggest bottleneck in outbound: zero false claims.",
-              author: "Lenny K.",
-              title: "Product & Growth Newsletter",
-              highlight: "Top Rated Tool 2026",
-              avatar: "/pixabay-avatar-1.jpg"
-            },
-            {
-              quote: "It has drastically increased the pace at which we turn around ICP research and reduced the manual steps to zero.",
-              author: "Kaylee R.",
-              title: "Research Ops Specialist",
-              highlight: "5x Faster Turnaround",
-              avatar: "/pixabay-avatar-2.jpg"
-            },
-            {
-              quote: "Quality of leads is orders of magnitude better than standard scrapers. The Crustdata integration is seamless.",
-              author: "Pedro O.",
-              title: "Senior Experience Research Lead",
-              highlight: "94 Avg Fit Score",
-              avatar: "/pixabay-avatar-3.jpg"
-            }
-          ].map((t, idx) => (
-            <div
-              key={t.author}
-              className="bg-white rounded-3xl p-6 border border-[#E5E5E0] shadow-sm flex flex-col justify-between hover:border-[#008080] transition-colors"
-            >
-              <div>
-                <div className="flex items-center gap-1 text-amber-500 mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="size-3.5 fill-current" />
-                  ))}
+        {/* Dual Cards (Recruit vs Research Hub) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          {/* Card Left: Recruit / Participant Recruitment */}
+          <div className="bg-[#F0F7F5] rounded-3xl p-8 border border-[#D5E6E1] flex flex-col justify-between shadow-xs">
+            <div>
+              {/* Inner Mockup Box (Matching User Interviews UI mock card) */}
+              <div className="bg-white rounded-2xl p-5 border border-[#E0ECE8] shadow-sm mb-8 relative overflow-hidden">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F2F5] mb-4 text-xs font-semibold text-[#14161C]">
+                  <span>Recruitment criteria</span>
+                  <span className="text-[#0E5144] font-mono text-[11px]">+42% velocity</span>
                 </div>
-                <p className="font-serif italic text-sm text-[#14161C] leading-relaxed mb-6">
-                  &ldquo;{t.quote}&rdquo;
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <span className="text-[10px] text-[#717684] uppercase font-mono block mb-1.5">Location</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="bg-[#F4F4F0] px-2.5 py-1 rounded-md text-[#14161C] font-medium text-[11px]">United States ✕</span>
+                      <span className="bg-[#F4F4F0] px-2.5 py-1 rounded-md text-[#14161C] font-medium text-[11px]">Canada ✕</span>
+                      <span className="bg-[#F4F4F0] px-2.5 py-1 rounded-md text-[#14161C] font-medium text-[11px]">Australia ✕</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-[#717684] uppercase font-mono block mb-1.5">Target Job Title(s)</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="bg-[#E6F3EF] text-[#0E5144] font-bold px-2.5 py-1 rounded-md text-[11px]">Software Engineer ✕</span>
+                      <span className="bg-[#E6F3EF] text-[#0E5144] font-bold px-2.5 py-1 rounded-md text-[11px]">Product Manager ✕</span>
+                    </div>
+                  </div>
+
+                  {/* Micro floating avatar stack */}
+                  <div className="absolute right-4 top-10 flex flex-col gap-1.5">
+                    <div className="size-8 rounded-full overflow-hidden border border-white shadow-sm relative">
+                      <Image src="/pixabay-avatar-1.jpg" alt="Lead candidate" fill sizes="32px" className="object-cover" />
+                    </div>
+                    <div className="size-8 rounded-full overflow-hidden border border-white shadow-sm relative">
+                      <Image src="/pixabay-avatar-2.jpg" alt="Lead candidate" fill sizes="32px" className="object-cover" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tag Label */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="size-2 rounded-full bg-[#0E5144]" />
+                <span className="text-xs font-mono uppercase tracking-widest text-[#0E5144] font-bold">
+                  recruit | PARTICIPANT RECRUITMENT
+                </span>
+              </div>
+
+              <h3 className="font-serif text-3xl text-[#14161C] mb-4 leading-tight">
+                Find qualified participants, fast
+              </h3>
+
+              <ul className="space-y-2 text-sm text-[#475569] mb-8">
+                <li className="flex items-center gap-2">
+                  <span className="text-[#0E5144] font-bold">✓</span>
+                  <span>Target professionals &amp; consumers in any niche</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#0E5144] font-bold">✓</span>
+                  <span>Match within hours, not weeks</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#0E5144] font-bold">✓</span>
+                  <span>AI-powered matching &amp; fraud detection</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={onOpenDashboard}
+              className="w-fit bg-[#0E5144] hover:bg-[#0B3F35] text-white text-sm font-semibold px-6 py-3 rounded-full transition-all cursor-pointer shadow-xs"
+            >
+              Explore Recruit
+            </button>
+          </div>
+
+          {/* Card Right: Research Hub / Participant CRM */}
+          <div className="bg-[#F0F7F5] rounded-3xl p-8 border border-[#D5E6E1] flex flex-col justify-between shadow-xs">
+            <div>
+              {/* Inner Mockup Box */}
+              <div className="bg-white rounded-2xl p-5 border border-[#E0ECE8] shadow-sm mb-8 relative overflow-hidden">
+                <div className="flex items-center justify-between pb-3 border-b border-[#F0F2F5] mb-4 text-xs font-semibold text-[#14161C]">
+                  <span>Entire population ▾</span>
+                  <div className="flex items-center gap-2 text-[11px]">
+                    <span className="bg-[#E6F3EF] text-[#0E5144] px-2 py-0.5 rounded font-bold">Hub population</span>
+                    <span className="text-[#717684]">Recruit population</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between bg-[#FAF9F5] p-2.5 rounded-lg border border-[#EBE8DC]">
+                    <span className="font-medium text-[#14161C]">Entire Population</span>
+                    <span className="font-mono text-[11px] text-[#717684]">10,422 panelists</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-[#FAF9F5] p-2.5 rounded-lg border border-[#EBE8DC]">
+                    <span className="font-medium text-[#14161C]">Beta Testers (Product Team)</span>
+                    <span className="font-mono text-[11px] text-[#0E5144] font-bold">635 panelists</span>
+                  </div>
+                </div>
+
+                {/* Starburst Doodle on top right */}
+                <div className="absolute top-2 right-2 text-[#0E5144] opacity-80">
+                  <svg className="size-10" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M 20,5 L 20,35 M 5,20 L 35,20 M 9,9 L 31,31 M 9,31 L 31,9" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Tag Label */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="size-2 rounded-full bg-[#14161C]" />
+                <span className="text-xs font-mono uppercase tracking-widest text-[#14161C] font-bold">
+                  research hub | PARTICIPANT CRM
+                </span>
+              </div>
+
+              <h3 className="font-serif text-3xl text-[#14161C] mb-4 leading-tight">
+                Talk to your users without friction
+              </h3>
+
+              <ul className="space-y-2 text-sm text-[#475569] mb-8">
+                <li className="flex items-center gap-2">
+                  <span className="text-[#0E5144] font-bold">✓</span>
+                  <span>Invite real users to research studies</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#0E5144] font-bold">✓</span>
+                  <span>Build user panels and enable self-serve recruiting</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-[#0E5144] font-bold">✓</span>
+                  <span>Automate scheduling, incentives, consent &amp; contact rules</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={onOpenDashboard}
+              className="w-fit bg-[#14161C] hover:bg-black text-white text-sm font-semibold px-6 py-3 rounded-full transition-all cursor-pointer shadow-xs"
+            >
+              Explore Research Hub
+            </button>
+          </div>
+
+        </div>
+
+        {/* ── 5. STATS BANNER: Exact "7.5 MILLION participants | 1 HOUR to first match..." border box ── */}
+        <div className="mt-12 bg-white rounded-2xl border-2 border-[#14161C] p-6 shadow-xs relative">
+          {/* Ribbon icon left */}
+          <div className="absolute left-6 top-1/2 -translate-y-1/2 hidden sm:block text-[#14161C]">
+            <Award className="size-8 stroke-[1.5]" />
+          </div>
+
+          <div className="text-center font-mono text-xs sm:text-sm tracking-wider uppercase text-[#14161C] sm:px-16 leading-relaxed">
+            <span className="font-bold">7.5 MILLION</span> participants &nbsp;|&nbsp;
+            <span className="font-bold">1 HOUR</span> to first match &nbsp;|&nbsp;
+            <span className="font-bold">98% POSITIVE</span> session feedback
+            <br className="hidden md:block" />
+            <span className="font-bold">22 TOOLS</span> integrated &nbsp;|&nbsp;
+            <span className="font-bold">100% COMPATIBLE</span> with any method &nbsp;|&nbsp;
+            <span className="font-bold">.6% SESSIONS</span> reported for fraud
+          </div>
+
+          {/* Starburst icon right */}
+          <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden sm:block text-[#14161C]">
+            <Sparkles className="size-8 stroke-[1.5]" />
+          </div>
+        </div>
+
+      </section>
+
+
+      {/* ── 6. "Start recruiting / SEE HOW IT WORKS" 3-STEP VERTICAL TIMELINE ── */}
+      <section className="max-w-6xl mx-auto px-6 lg:px-12 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+          
+          {/* Left Column: Heading + Koboyo Doodle character */}
+          <div className="md:col-span-5">
+            <h3 className="font-serif text-4xl sm:text-5xl text-[#14161C] mb-2 leading-tight">
+              Start recruiting
+            </h3>
+            <span className="text-xs font-mono uppercase tracking-widest text-[#717684] block mb-8 font-bold">
+              SEE HOW IT WORKS
+            </span>
+
+            {/* Koboyo Doodle Running Characters SVG */}
+            <div className="text-[#14161C]">
+              <svg className="w-48 h-36" viewBox="0 0 160 120" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {/* Person 1 */}
+                <circle cx="40" cy="35" r="14" />
+                <path d="M 40,50 L 40,85 M 40,65 L 20,55 M 40,65 L 60,60" />
+                <path d="M 40,85 L 25,115 M 40,85 L 55,110" />
+                {/* Person 2 */}
+                <circle cx="95" cy="40" r="14" />
+                <path d="M 95,55 L 95,90 M 95,70 L 75,65 M 95,70 L 115,75" />
+                <path d="M 95,90 L 80,118 M 95,90 L 110,115" />
+                {/* Connecting hand-drawn flag */}
+                <path d="M 125,45 L 145,35 L 145,65 L 125,55 Z" strokeWidth="1.5" />
+                <path d="M 125,45 L 125,100" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Right Column: 3 Stepper Rows */}
+          <div className="md:col-span-7 divide-y divide-[#E5E5E0]">
+            
+            {/* Step 1 */}
+            <div className="py-6 flex items-start gap-6">
+              <div className="pt-1">
+                <span className="font-mono text-xs text-[#717684] uppercase tracking-wider block font-bold">
+                  STEP 1:
+                </span>
+              </div>
+              <div>
+                <h4 className="font-medium text-base text-[#14161C] mb-1">
+                  Target and screen participants
+                </h4>
+                <p className="text-sm text-[#64748B]">
+                  Find the best-fit candidates for any research study.
                 </p>
               </div>
+            </div>
 
-              <div className="flex items-center gap-3 pt-4 border-t border-[#F0F2F7]">
-                <div className="relative size-10 rounded-full overflow-hidden border border-[#E2E8F0]">
-                  <Image
-                    src={t.avatar}
-                    alt={`${t.author} avatar`}
-                    fill
-                    sizes="40px"
-                    loading="lazy"
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <h4 className="font-bold text-xs text-[#14161C]">{t.author}</h4>
-                  <p className="text-[11px] text-[#717684]">{t.title}</p>
-                </div>
+            {/* Step 2 */}
+            <div className="py-6 flex items-start gap-6">
+              <div className="pt-1">
+                <span className="font-mono text-xs text-[#717684] uppercase tracking-wider block font-bold">
+                  STEP 2:
+                </span>
+              </div>
+              <div>
+                <h4 className="font-medium text-base text-[#14161C] mb-1">
+                  Integrate your favorite tools
+                </h4>
+                <p className="text-sm text-[#64748B]">
+                  Connect to dozens of popular research and testing tools.
+                </p>
               </div>
             </div>
-          ))}
+
+            {/* Step 3 */}
+            <div className="py-6 flex items-start gap-6">
+              <div className="pt-1">
+                <span className="font-mono text-xs text-[#717684] uppercase tracking-wider block font-bold">
+                  STEP 3:
+                </span>
+              </div>
+              <div>
+                <h4 className="font-medium text-base text-[#14161C] mb-1">
+                  Automate every study run by your team
+                </h4>
+                <p className="text-sm text-[#64748B]">
+                  Built-in scheduling, incentives, analysis, and more.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-6">
+              <button
+                onClick={onOpenDashboard}
+                className="bg-[#0E5144] hover:bg-[#0B3F35] text-white text-sm font-semibold px-7 py-3 rounded-full transition-all cursor-pointer shadow-xs"
+              >
+                See plans &amp; pricing
+              </button>
+            </div>
+
+          </div>
+
         </div>
       </section>
 
-      {/* ── FINAL EDITORIAL CONVERSION CTA ── */}
-      <section className="max-w-4xl mx-auto px-6 md:px-12 pb-24 text-center">
-        <div className="bg-[#FAF9F6] border-2 border-[#14161C] rounded-3xl p-10 md:p-16 shadow-lg relative overflow-hidden">
-          <div className="size-14 rounded-2xl bg-[#14161C] flex items-center justify-center mx-auto mb-6 shadow-md">
-            <Zap className="size-6 text-[#2dd4bf] fill-[#2dd4bf]" />
+
+      {/* ── 7. DEEP MAROON BANNER: "Want to earn money participating in research?" ── */}
+      <section className="w-full bg-[#5C1B33] text-white py-16 px-6 lg:px-12 my-12 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          
+          {/* Left: Koboyo Doodle with Arms Raised & Money Sack */}
+          <div className="md:col-span-5 flex justify-center md:justify-start">
+            <svg className="w-64 h-56 text-white" viewBox="0 0 200 180" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              {/* Torso & Head */}
+              <circle cx="100" cy="50" r="20" strokeWidth="2" />
+              <path d="M 100,72 L 100,130" strokeWidth="3" />
+              {/* Joyful arms raised */}
+              <path d="M 100,85 L 60,40 M 60,40 L 40,30" strokeWidth="3" />
+              <path d="M 100,85 L 140,40 M 140,40 L 160,30" strokeWidth="3" />
+              {/* Floating Money ($) & Gift Icon */}
+              <circle cx="35" cy="55" r="14" strokeWidth="1.5" />
+              <text x="31" y="60" fill="currentColor" fontSize="14" fontWeight="bold">$</text>
+              <rect x="145" y="65" width="22" height="22" rx="4" strokeWidth="1.5" />
+              <path d="M 156,65 L 156,87 M 145,76 L 167,76" />
+            </svg>
           </div>
 
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#14161C] mb-4">
-            Talk to customers today.
-            <br />
-            <span className="italic text-[#008080]">Seriously, it&apos;s that fast.</span>
+          {/* Right: Copy & Button */}
+          <div className="md:col-span-7">
+            <h3 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white mb-4 leading-tight">
+              Want to earn money participating in research?
+            </h3>
+            <p className="text-white/80 text-sm sm:text-base mb-8 font-light">
+              Participants have earned <span className="font-bold text-white">$60 million</span> sharing feedback with leading companies.
+            </p>
+            <button
+              onClick={onOpenDashboard}
+              className="bg-transparent hover:bg-white/10 text-white font-semibold text-sm border-2 border-white px-8 py-3 rounded-full transition-colors cursor-pointer"
+            >
+              Sign up to participate
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* ── 8. TESTIMONIALS & G2 BADGES: "Industry leaders rely on User Interviews" ── */}
+      <section className="max-w-6xl mx-auto px-6 lg:px-12 py-16">
+        
+        {/* Header with Title + 3 G2 Badges */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12">
+          <h2 className="font-serif text-3xl sm:text-4xl text-[#14161C] max-w-md leading-tight">
+            Industry leaders rely on ProspectForge
           </h2>
 
-          <p className="text-base text-[#475569] max-w-xl mx-auto mb-8 font-sans">
-            No signup. No API key required for the interactive walkthrough. Watch the autonomous
-            agent locate, score, and verify your target companies in real time.
-          </p>
+          {/* 3 Ribbon Badges (High Performer, Leader, Momentum Leader) */}
+          <div className="flex items-center gap-4">
+            <div className="bg-white border border-[#E5E5E0] rounded-xl px-4 py-2.5 shadow-xs text-center">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 block font-bold">High</span>
+              <span className="font-bold text-xs text-[#14161C]">Performer</span>
+            </div>
+            <div className="bg-white border border-[#E5E5E0] rounded-xl px-4 py-2.5 shadow-xs text-center">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 block font-bold">G2</span>
+              <span className="font-bold text-xs text-[#14161C]">Leader</span>
+            </div>
+            <div className="bg-white border border-[#E5E5E0] rounded-xl px-4 py-2.5 shadow-xs text-center">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 block font-bold">Momentum</span>
+              <span className="font-bold text-xs text-[#14161C]">Leader</span>
+            </div>
+          </div>
+        </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button
-              id="bottom-cta-launch"
-              onClick={onOpenDashboard}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-[#14161C] hover:bg-[#008080] text-white font-semibold text-base px-10 py-4 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer group"
-            >
-              <span>Launch Interactive Agent</span>
-              <ChevronRight className="size-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
-              onClick={onOpenDashboard}
-              className="w-full sm:w-auto text-sm font-semibold text-[#14161C] hover:text-[#008080] border border-[#CBD5E1] bg-white px-8 py-4 rounded-full transition-colors cursor-pointer"
-            >
-              Book Architecture Walkthrough
-            </button>
+        {/* 4 Cards Grid (1 Green Featured Card + 3 Mint/White Testimonial Cards) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Card 1: Dark Green Featured "A recruitment game changer." */}
+          <div className="bg-[#1E4E42] text-white rounded-2xl p-8 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div>
+              <h3 className="font-serif italic text-2xl sm:text-3xl font-normal text-white mb-4">
+                &ldquo;A recruitment game changer.&rdquo;
+              </h3>
+              <p className="text-white/85 text-sm leading-relaxed mb-6">
+                ProspectForge has climbed to the #2 spot by solving one of the biggest headaches in research:{" "}
+                <strong className="text-white">finding the right people to talk to.</strong>
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/20">
+              <div className="flex items-center gap-3">
+                <div className="size-9 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                  LK
+                </div>
+                <div>
+                  <span className="font-bold text-xs text-white block">LENNY&apos;S NEWSLETTER</span>
+                  <span className="text-[11px] text-white/70">State of Tech Tools 2026</span>
+                </div>
+              </div>
+              <span className="text-xs text-emerald-300 underline cursor-pointer">See Report →</span>
+            </div>
           </div>
 
-          <p className="mt-6 text-xs text-[#717684] font-mono">
-            Powered by Crustdata API · AWS Bedrock (Claude 3.5 / Nova) · Neatlogs Observability
-          </p>
+          {/* Card 2: Light Teal Quote Box */}
+          <div className="bg-[#EBF5F2] rounded-2xl p-8 flex flex-col justify-between border border-[#D5E6E1]">
+            <div>
+              <p className="text-sm text-[#14161C] leading-relaxed mb-6 font-normal">
+                &ldquo;It has <strong className="font-bold">drastically increased the pace at which we can turn around research</strong> and reduced the manual steps in our flow. This is a tool I highly recommend!&rdquo;
+              </p>
+            </div>
+            <div className="flex items-center justify-between pt-4 border-t border-[#D5E6E1]">
+              <span className="text-xs text-[#475569] font-medium">
+                — KAYLEE R., Research Ops Specialist | Houghton Mifflin Harcourt
+              </span>
+              <span className="text-amber-500 text-xs">★★★★★</span>
+            </div>
+          </div>
+
+          {/* Card 3: Light Teal Quote Box */}
+          <div className="bg-[#EBF5F2] rounded-2xl p-8 flex flex-col justify-between border border-[#D5E6E1]">
+            <div>
+              <p className="text-sm text-[#14161C] leading-relaxed mb-6 font-normal">
+                &ldquo;It helps our team perform <strong className="font-bold">rapid recruitment at scale</strong> when we want to recruit people who are not current HP customers.&rdquo;
+              </p>
+            </div>
+            <div className="flex items-center justify-between pt-4 border-t border-[#D5E6E1]">
+              <span className="text-xs text-[#475569] font-medium">
+                — PEDRO O., Senior Experience Research Manager | HP
+              </span>
+              <span className="text-amber-500 text-xs">★★★★★</span>
+            </div>
+          </div>
+
+          {/* Card 4: Light Teal Quote Box */}
+          <div className="bg-[#EBF5F2] rounded-2xl p-8 flex flex-col justify-between border border-[#D5E6E1]">
+            <div>
+              <p className="text-sm text-[#14161C] leading-relaxed mb-6 font-normal">
+                &ldquo;<strong className="font-bold">Quality of participants is much better than other platforms.</strong> The demographic and background information is rich and helps to understand the participants better.&rdquo;
+              </p>
+            </div>
+            <div className="flex items-center justify-between pt-4 border-t border-[#D5E6E1]">
+              <span className="text-xs text-[#475569] font-medium">
+                — NIVI S., Principal UX Researcher | Citizens Bank
+              </span>
+              <span className="text-amber-500 text-xs">★★★★★</span>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* ── FOOTER: Editorial & Multi-Column ── */}
-      <footer className="border-t border-[#E5E5E0] bg-[#FAF9F6] py-14 px-6 md:px-12">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8 text-xs text-[#64748B]">
-          <div className="col-span-2">
+
+      {/* ── 9. NAVY BLUE FINAL CTA: "Talk to users today. Seriously, we're fast." ── */}
+      <section className="w-full bg-[#0A1A2F] text-white py-20 px-6 lg:px-12 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          
+          <div className="md:col-span-8">
+            <h2 className="font-serif text-4xl sm:text-6xl font-normal text-white mb-6 leading-tight">
+              Talk to users today.
+              <br />
+              Seriously, we&apos;re <span className="italic font-serif">fast.</span>
+            </h2>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                id="bottom-signup-free"
+                onClick={onOpenDashboard}
+                className="bg-[#2dd4bf] hover:bg-[#14b8a6] text-[#0A1A2F] font-bold text-sm px-8 py-3.5 rounded-full transition-colors cursor-pointer"
+              >
+                Sign up free
+              </button>
+              <button
+                onClick={onOpenDashboard}
+                className="bg-transparent hover:bg-white/10 text-white font-semibold text-sm border border-white/40 px-8 py-3.5 rounded-full transition-colors cursor-pointer"
+              >
+                Book a demo
+              </button>
+            </div>
+          </div>
+
+          {/* Shooting Star / Comet Doodle */}
+          <div className="md:col-span-4 flex justify-center">
+            <svg className="w-64 h-48 text-[#2dd4bf]" viewBox="0 0 200 160" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="160" cy="40" r="14" strokeWidth="2.5" />
+              <path d="M 148,48 L 50,140 M 165,55 L 75,145 M 135,35 L 40,130" strokeWidth="2" strokeDasharray="6 6" />
+              <path d="M 150,20 L 150,26 M 175,30 L 180,30" />
+            </svg>
+          </div>
+
+        </div>
+      </section>
+
+
+      {/* ── 10. MULTI-COLUMN FOOTER (Exact structure of User Interviews) ── */}
+      <footer className="w-full bg-[#071322] text-white py-16 px-6 lg:px-12 text-xs border-t border-white/10">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-10">
+          
+          {/* Col 1: Logo & Copy */}
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="size-6 rounded-lg bg-[#14161C] flex items-center justify-center">
-                <Zap className="size-3.5 text-[#2dd4bf] fill-[#2dd4bf]" />
+              <div className="size-6 rounded-full bg-[#2dd4bf] flex items-center justify-center text-[#071322] font-bold text-xs">
+                PF
               </div>
-              <span className="font-serif font-bold text-base text-[#14161C]">ProspectForge</span>
+              <span className="font-serif font-bold text-base text-white">prospect forge</span>
             </div>
-            <p className="text-xs text-[#717684] max-w-sm mb-4 leading-relaxed font-sans">
-              Autonomous B2B Prospecting Agent built for the Neatlogs Hackathon 2026.
-              Engineered with zero-hallucination verification protocols and live telemetry.
+            <p className="text-zinc-400 text-xs leading-relaxed">
+              Autonomous B2B participant research &amp; verified outreach.
             </p>
-            <div className="flex items-center gap-3 text-zinc-400 font-mono text-[11px]">
-              <span>© 2026 ProspectForge</span>
-              <span>·</span>
-              <a href="https://app.neatlogs.com" target="_blank" rel="noreferrer" className="hover:text-[#008080]">
-                Neatlogs Telemetry
-              </a>
-            </div>
           </div>
 
+          {/* Col 2: PRODUCT */}
           <div>
-            <h5 className="font-bold text-[#14161C] uppercase font-mono text-[10px] tracking-wider mb-3">
-              Platform
+            <h5 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-4">
+              PRODUCT
             </h5>
-            <ul className="space-y-2">
-              <li><button onClick={onOpenDashboard} className="hover:text-[#14161C] cursor-pointer">Autonomous Runner</button></li>
-              <li><button onClick={onOpenDashboard} className="hover:text-[#14161C] cursor-pointer">ICP Plan Synthesis</button></li>
-              <li><button onClick={onOpenDashboard} className="hover:text-[#14161C] cursor-pointer">Recovery Ladder</button></li>
-              <li><button onClick={onOpenDashboard} className="hover:text-[#14161C] cursor-pointer">Ground-Truth Verifier</button></li>
+            <ul className="space-y-2.5 text-zinc-300">
+              <li><button onClick={onOpenDashboard} className="hover:text-white cursor-pointer">Recruit</button></li>
+              <li><button onClick={onOpenDashboard} className="hover:text-white cursor-pointer">Research Hub</button></li>
+              <li><button onClick={onOpenDashboard} className="hover:text-white cursor-pointer">Pricing</button></li>
+              <li><button onClick={onOpenDashboard} className="hover:text-white cursor-pointer">Integrations &amp; APIs</button></li>
+              <li><button onClick={onOpenDashboard} className="hover:text-white cursor-pointer">Security</button></li>
+              <li><button onClick={onOpenDashboard} className="hover:text-white cursor-pointer">Panel Reports</button></li>
+              <li><button onClick={onOpenDashboard} className="hover:text-white cursor-pointer">Case Studies</button></li>
             </ul>
           </div>
 
+          {/* Col 3: RESEARCHER RESOURCES */}
           <div>
-            <h5 className="font-bold text-[#14161C] uppercase font-mono text-[10px] tracking-wider mb-3">
-              Integrations
+            <h5 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-4">
+              RESEARCHER RESOURCES
             </h5>
-            <ul className="space-y-2">
-              <li><span className="text-[#334155]">Crustdata B2B API</span></li>
-              <li><span className="text-[#334155]">AWS Bedrock Nova</span></li>
-              <li><span className="text-[#334155]">Neatlogs Spans</span></li>
-              <li><span className="text-[#334155]">cfo.ai Cost Matrix</span></li>
+            <ul className="space-y-2.5 text-zinc-300">
+              <li><span className="text-zinc-400">Help Center</span></li>
+              <li><span className="text-zinc-400">User Interviews Academy</span></li>
+              <li><span className="text-zinc-400">Field Guide</span></li>
+              <li><span className="text-zinc-400">Blog</span></li>
+              <li><span className="text-zinc-400">Podcast</span></li>
+              <li><span className="text-zinc-400">Incentive Calculator</span></li>
             </ul>
           </div>
 
+          {/* Col 4: PARTICIPANT RESOURCES */}
           <div>
-            <h5 className="font-bold text-[#14161C] uppercase font-mono text-[10px] tracking-wider mb-3">
-              Hackathon Stack
+            <h5 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-4">
+              PARTICIPANT RESOURCES
             </h5>
-            <ul className="space-y-2">
-              <li><span className="text-[#334155]">Next.js 16 (App Router)</span></li>
-              <li><span className="text-[#334155]">FastAPI Backend</span></li>
-              <li><span className="text-[#334155]">SQLite + WAL</span></li>
-              <li><span className="text-[#334155]">Pixabay Assets</span></li>
+            <ul className="space-y-2.5 text-zinc-300">
+              <li><span className="text-zinc-400">Help Center</span></li>
+              <li><span className="text-zinc-400">Browse All Studies</span></li>
+              <li><span className="text-zinc-400">Focus Groups Studies</span></li>
+              <li><span className="text-zinc-400">Diary Studies</span></li>
+              <li><span className="text-zinc-400">Refer a Participant</span></li>
             </ul>
+          </div>
+
+          {/* Col 5: COMPANY & COMPARE */}
+          <div>
+            <h5 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-4">
+              COMPANY
+            </h5>
+            <ul className="space-y-2.5 text-zinc-300 mb-6">
+              <li><span className="text-zinc-400">About Us</span></li>
+              <li><span className="text-zinc-400">Careers</span></li>
+              <li><span className="text-zinc-400">Partnerships</span></li>
+            </ul>
+
+            <h5 className="font-mono text-[11px] uppercase tracking-wider text-zinc-400 font-bold mb-3">
+              COMPARE
+            </h5>
+            <ul className="space-y-2 text-zinc-400 text-[11px]">
+              <li><span>vs. Respondent</span></li>
+              <li><span>vs. Dscout</span></li>
+              <li><span>vs. Qualtrics</span></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-zinc-800 text-[11px] text-zinc-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span>© 2026 ProspectForge by Neatlogs. All rights reserved.</span>
+          <div className="flex gap-4">
+            <span>Researcher Terms</span>
+            <span>Participant Terms</span>
+            <span>Privacy Policy</span>
           </div>
         </div>
       </footer>
+
     </div>
   );
 }
