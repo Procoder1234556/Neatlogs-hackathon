@@ -107,7 +107,7 @@ export interface RunDetail {
   }>;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://neatlogs-hackathon.p03490978.workers.dev/api/v1";
 
 export async function fetchRunsSummary() {
   try {

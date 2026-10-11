@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: "https://neatlogs-hackathon.p03490978.workers.dev/api/v1/:path*",
+      },
+      {
+        source: "/health",
+        destination: "https://neatlogs-hackathon.p03490978.workers.dev/health",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

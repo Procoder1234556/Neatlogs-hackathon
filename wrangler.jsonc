@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "neatlogs-hackathon",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2026-10-11",
+  "previews": {},
+  "kv_namespaces": [
+    {
+      "binding": "PROSPECTFORGE_KV",
+      "id": "c4ec2f17e6bc4e498675d50c4bfec3d8"
+    }
+  ],
+  "vars": {
+    "APP_ENV": "production",
+    "NEATLOGS_WORKFLOW_NAME": "prospectforge-b2b-agent",
+    "NEATLOGS_ENDPOINT": "https://ingest.neatlogs.com"
+  }
+}

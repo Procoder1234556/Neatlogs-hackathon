@@ -53,6 +53,7 @@ import {
   CartesianGrid
 } from "recharts";
 import {
+  API_BASE,
   fetchRunsSummary,
   fetchRunDetail,
   fetchRunLeads,
@@ -822,7 +823,7 @@ export default function Dashboard() {
   };
 
   const handleExportCSV = () => {
-    window.open(`http://localhost:8000/api/v1/runs/${activeRunId}/export.csv`, "_blank");
+    window.open(`${API_BASE}/runs/${activeRunId}/export.csv`, "_blank");
   };
 
   // Intermediate Tasks progression data
