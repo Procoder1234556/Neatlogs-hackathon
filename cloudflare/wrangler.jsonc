@@ -3,6 +3,7 @@
   "name": "neatlogs-hackathon",
   "main": "worker.js",
   "compatibility_date": "2026-10-11",
+  "previews": {},
   "kv_namespaces": [
     {
       "binding": "PROSPECTFORGE_KV",
