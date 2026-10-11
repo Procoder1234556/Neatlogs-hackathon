@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     CRUSTDATA_BASE_URL: str = "https://api.crustdata.com"
 
     # Firecrawl Web Intelligence Fallback
-    FIRECRAWL_API_KEY: Optional[str] = Field(default_factory=lambda: os.getenv("FIRECRAWL_API_KEY", "fc-969ddebbb1fe47758581d668ec743c6c"))
+    FIRECRAWL_API_KEY: Optional[str] = Field(default_factory=lambda: os.getenv("FIRECRAWL_API_KEY"))
     FIRECRAWL_BASE_URL: str = "https://api.firecrawl.dev/v1"
 
     # Safety, Budget & Fault Injection
