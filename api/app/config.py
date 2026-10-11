@@ -19,6 +19,9 @@ class Settings(BaseSettings):
 
     # AWS Bedrock
     AWS_REGION: str = "us-east-1"
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_SESSION_TOKEN: Optional[str] = None
     AWS_BEARER_TOKEN_BEDROCK: Optional[str] = None
     BEDROCK_MODEL_STRONG: str = "anthropic.claude-3-5-sonnet-20241022-v2:0"
     BEDROCK_MODEL_FAST: str = "anthropic.claude-3-5-haiku-20241022-v1:0"

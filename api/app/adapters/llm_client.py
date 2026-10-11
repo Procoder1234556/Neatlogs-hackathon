@@ -13,18 +13,32 @@ class LLMClient:
         self._init_bedrock()
 
     def _init_bedrock(self):
-        token = settings.AWS_BEARER_TOKEN_BEDROCK or os.getenv("AWS_BEARER_TOKEN_BEDROCK")
-        if token:
-            try:
-                import boto3
-                raw_client = boto3.client("bedrock-runtime", region_name=settings.AWS_REGION)
+        try:
+            import boto3
+            has_credentials = (
+                bool(settings.AWS_BEARER_TOKEN_BEDROCK or os.getenv("AWS_BEARER_TOKEN_BEDROCK")) or
+                bool((settings.AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")) and
+                     (settings.AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY"))) or
+                bool(os.getenv("AWS_PROFILE"))
+            )
+            if has_credentials:
+                client_kwargs = {"region_name": settings.AWS_REGION}
+                ak = settings.AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
+                sk = settings.AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")
+                st = settings.AWS_SESSION_TOKEN or os.getenv("AWS_SESSION_TOKEN")
+                if ak and sk:
+                    client_kwargs["aws_access_key_id"] = ak
+                    client_kwargs["aws_secret_access_key"] = sk
+                    if st:
+                        client_kwargs["aws_session_token"] = st
+                raw_client = boto3.client("bedrock-runtime", **client_kwargs)
                 self._bedrock = wrap_llm_client(raw_client)
                 logger.info("Bedrock client initialized and wrapped with neatlogs.")
-            except Exception as e:
-                logger.warning(f"Bedrock initialization fallback: {e}")
-                self._bedrock = None
-        else:
-            logger.info("Bedrock running in deterministic local fallback mode.")
+            else:
+                logger.info("Bedrock running in deterministic local fallback mode.")
+        except Exception as e:
+            logger.warning(f"Bedrock initialization fallback: {e}")
+            self._bedrock = None
 
     async def generate_json(
         self,
