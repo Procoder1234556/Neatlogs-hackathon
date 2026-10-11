@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2, ShieldCheck, Check } from "lucide-react";
 
 interface QuestionItem {
   id: string;
@@ -19,8 +19,8 @@ export default function ApprovalCard({
   questions = [
     {
       id: "q1",
-      title: "Confirm primary search widen parameter if seed yields < 5 leads:",
-      options: ["Widen headcount to 10..150", "Add Series B venture rounds", "Include remote worldwide titles"]
+      title: "Confirm autonomous recovery protocol if seed yields < 5 leads:",
+      options: ["Widen headcount to 10..150 (automated)", "Add Series B venture rounds", "Include remote worldwide titles"]
     },
     {
       id: "q2",
@@ -29,7 +29,7 @@ export default function ApprovalCard({
     },
     {
       id: "q3",
-      title: "Set automated recovery budget cap limit:",
+      title: "Set automated recovery credit budget cap limit:",
       options: ["Standard (max 250 credits)", "Conservative (max 100 credits)", "Aggressive (max 500 credits)"]
     }
   ],
@@ -38,7 +38,7 @@ export default function ApprovalCard({
 }: ApprovalCardProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({
-    q1: "Widen headcount to 10..150",
+    q1: "Widen headcount to 10..150 (automated)",
     q2: "Concise peer engineering (default)",
     q3: "Standard (max 250 credits)"
   });
@@ -50,20 +50,20 @@ export default function ApprovalCard({
   };
 
   return (
-    <div className="w-full rounded-[24px] bg-white border border-slate-200/90 shadow-sm p-4 text-xs transition-all">
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
-        <div className="flex items-center gap-1.5 font-bold text-[#14161C]">
-          <ShieldCheck className="w-4 h-4 text-blue-600" />
+    <div className="w-full rounded-[24px] bg-[#1E1E1E] border border-[#333333] shadow-md p-4 text-xs transition-all">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#2C2C2C]">
+        <div className="flex items-center gap-2 font-bold text-white">
+          <ShieldCheck className="size-4 text-blue-400" />
           <span>Human-in-the-Loop Guardrail Review</span>
         </div>
-        <div className="flex items-center gap-1 text-[#717684] tabular-nums font-medium">
+        <div className="flex items-center gap-1 text-[#8E8E8E] tabular-nums font-medium">
           <button
             type="button"
             disabled={currentIdx === 0}
             onClick={() => setCurrentIdx(currentIdx - 1)}
-            className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+            className="p-1 rounded hover:bg-[#2C2C2C] disabled:opacity-30 cursor-pointer"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
+            <ChevronLeft className="size-3.5" />
           </button>
           <span>
             {currentIdx + 1} / {questions.length}
@@ -72,15 +72,15 @@ export default function ApprovalCard({
             type="button"
             disabled={currentIdx === questions.length - 1}
             onClick={() => setCurrentIdx(currentIdx + 1)}
-            className="p-1 rounded hover:bg-slate-100 disabled:opacity-30 cursor-pointer"
+            className="p-1 rounded hover:bg-[#2C2C2C] disabled:opacity-30 cursor-pointer"
           >
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="size-3.5" />
           </button>
         </div>
       </div>
 
       {/* Question Title */}
-      <h4 className="text-[13px] font-semibold text-[#14161C] mb-2.5">
+      <h4 className="text-[13px] font-semibold text-white mb-2.5">
         {currentQ.title}
       </h4>
 
@@ -95,32 +95,32 @@ export default function ApprovalCard({
               onClick={() => handleSelect(opt)}
               className={`flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors cursor-pointer border ${
                 isSelected
-                  ? "bg-blue-50/60 border-blue-300 text-blue-900 font-medium"
-                  : "bg-[#F5F6FA] border-transparent hover:bg-slate-100 text-[#14161C]"
+                  ? "bg-blue-950/60 border-blue-500 text-blue-200 font-semibold shadow-sm"
+                  : "bg-[#262626] border-[#383838] hover:bg-[#2F2F2F] text-[#CCCCCC]"
               }`}
             >
               <span>{opt}</span>
-              {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />}
+              {isSelected && <CheckCircle2 className="size-3.5 text-blue-400" />}
             </button>
           );
         })}
       </div>
 
       {/* Footer Controls */}
-      <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-2 border-t border-[#2C2C2C]">
         <button
           type="button"
           onClick={onSkip}
-          className="text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 rounded cursor-pointer"
+          className="text-[#8E8E8E] hover:text-white font-semibold px-2 py-1 rounded cursor-pointer"
         >
-          Skip
+          Skip Review
         </button>
         <div className="flex items-center gap-2">
           {currentIdx < questions.length - 1 ? (
             <button
               type="button"
               onClick={() => setCurrentIdx(currentIdx + 1)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3.5 py-1.5 rounded-full cursor-pointer shadow-sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3.5 py-1.5 rounded-full cursor-pointer shadow-sm text-xs"
             >
               Next Step
             </button>
@@ -128,9 +128,10 @@ export default function ApprovalCard({
             <button
               type="button"
               onClick={() => onApprove && onApprove(selectedAnswers)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-1.5 rounded-full cursor-pointer shadow-sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-1.5 rounded-full cursor-pointer shadow-sm text-xs flex items-center gap-1.5"
             >
-              Confirm & Launch
+              <Check className="size-3.5" />
+              <span>Confirm & Dispatch</span>
             </button>
           )}
         </div>

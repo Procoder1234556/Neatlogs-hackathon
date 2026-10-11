@@ -13,5 +13,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup aimock
-        uses: CopilotKit/aimock@v1.45.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate aimock fixtures
+        run: npx --yes @copilotkit/aimock@1.45.0 aimock validate ./fixtures
+
+      - name: Start aimock daemon & verify health
+        run: |
+          npx --yes @copilotkit/aimock@1.45.0 llmock -f ./fixtures/completions.json --validate-on-load &
+          sleep 4
+          curl -f http://127.0.0.1:4010/health
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies & run test suite
+        run: |
+          pip install -r api/requirements.txt
+          PYTHONPATH=. pytest -v api/tests/test_flow.py

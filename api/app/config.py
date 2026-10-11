@@ -27,14 +27,16 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
     AWS_SESSION_TOKEN: Optional[str] = None
     AWS_BEARER_TOKEN_BEDROCK: Optional[str] = None
-    BEDROCK_MODEL_STRONG: str = "anthropic.claude-3-5-sonnet-20241022-v2:0"
-    BEDROCK_MODEL_FAST: str = "anthropic.claude-3-5-haiku-20241022-v1:0"
+    BEDROCK_MODEL_STRONG: str = "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+    BEDROCK_MODEL_FAST: str = "us.anthropic.claude-3-5-haiku-20241022-v1:0"
+    BEDROCK_FALLBACK_MODELS: Optional[str] = "us.anthropic.claude-3-7-sonnet-20250219-v1:0,anthropic.claude-3-haiku-20240307-v1:0,amazon.nova-lite-v1:0,amazon.nova-micro-v1:0,meta.llama3-1-8b-instruct-v1:0,mistral.mistral-7b-instruct-v0:2"
 
     # Multi-Model & Alternate Providers Fallback
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_BASE_URL: str = "https://api.openai.com/v1"
     OPENAI_MODEL: str = "gpt-4o-mini"
     GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "qwen/qwen3.8-27b"
     OPENROUTER_API_KEY: Optional[str] = None
 
     # Crustdata REST API
@@ -51,6 +53,7 @@ class Settings(BaseSettings):
     SUPABASE_PROJECT_REF: str = "jbfyxtbyheyuylptreud"
     SUPABASE_URL: str = Field(default_factory=lambda: os.getenv("SUPABASE_URL", "https://jbfyxtbyheyuylptreud.supabase.co"))
     SUPABASE_KEY: Optional[str] = None
+    SUPABASE_ACCESS_TOKEN: Optional[str] = None
     SUPABASE_MCP_URL: str = "https://mcp.supabase.com/mcp?project_ref=jbfyxtbyheyuylptreud&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
 
 settings = Settings()

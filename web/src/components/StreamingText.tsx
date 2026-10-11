@@ -36,29 +36,29 @@ export default function StreamingText({
   };
 
   return (
-    <div className="w-full flex flex-col gap-2.5">
+    <div className="w-full flex flex-col gap-3">
       {/* Streamed Body */}
-      <div className="text-[13px] leading-relaxed text-[#14161C] whitespace-pre-wrap font-sans">
+      <div className="text-[13px] leading-relaxed text-[#ECECEC] whitespace-pre-wrap font-sans">
         {text}
         {isStreaming && (
           <span
-            className="ml-1 inline-block h-3.5 w-1 translate-y-0.5 rounded-full bg-blue-600 animate-pulse"
+            className="ml-1 inline-block h-4 w-1.5 translate-y-0.5 rounded-full bg-blue-400 animate-pulse"
             aria-hidden="true"
           />
         )}
       </div>
 
       {/* Source badges & Action bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#2C2C2C] text-xs">
         {/* Source Pills */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-medium text-[#717684]">Verified Sources:</span>
+          <span className="text-[11px] font-medium text-[#8E8E8E]">Verified Ground-Truth Sources:</span>
           {sources.map((s, idx) => (
             <span
               key={idx}
-              className="inline-flex items-center gap-1 bg-[#F5F6FA] hover:bg-slate-200/60 border border-slate-200/60 px-2 py-0.5 rounded-full text-[11px] font-medium text-[#14161C] transition-colors"
+              className="inline-flex items-center gap-1 bg-[#242424] hover:bg-[#2C2C2C] border border-[#333333] px-2 py-0.5 rounded-full text-[11px] font-medium text-[#CCCCCC] transition-colors"
             >
-              <Database className="w-2.5 h-2.5 text-blue-600" />
+              <Database className="size-2.5 text-blue-400" />
               <span>{s.name}</span>
             </span>
           ))}
@@ -70,37 +70,37 @@ export default function StreamingText({
             type="button"
             onClick={handleCopy}
             title="Copy text"
-            className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1 rounded-md text-[#8E8E8E] hover:text-white hover:bg-[#2A2A2A] transition-colors cursor-pointer"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
           </button>
           {onRetry && (
             <button
               type="button"
               onClick={onRetry}
               title="Regenerate"
-              className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1 rounded-md text-[#8E8E8E] hover:text-white hover:bg-[#2A2A2A] transition-colors cursor-pointer"
             >
-              <RotateCw className="w-3.5 h-3.5" />
+              <RotateCw className="size-3.5" />
             </button>
           )}
           <button
             type="button"
             onClick={() => setFeedback(feedback === "up" ? null : "up")}
             className={`p-1 rounded-md transition-colors cursor-pointer ${
-              feedback === "up" ? "text-emerald-600 bg-emerald-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              feedback === "up" ? "text-emerald-400 bg-emerald-950/70" : "text-[#8E8E8E] hover:text-white hover:bg-[#2A2A2A]"
             }`}
           >
-            <ThumbsUp className="w-3.5 h-3.5" />
+            <ThumbsUp className="size-3.5" />
           </button>
           <button
             type="button"
             onClick={() => setFeedback(feedback === "down" ? null : "down")}
             className={`p-1 rounded-md transition-colors cursor-pointer ${
-              feedback === "down" ? "text-rose-600 bg-rose-50" : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+              feedback === "down" ? "text-rose-400 bg-rose-950/70" : "text-[#8E8E8E] hover:text-white hover:bg-[#2A2A2A]"
             }`}
           >
-            <ThumbsDown className="w-3.5 h-3.5" />
+            <ThumbsDown className="size-3.5" />
           </button>
         </div>
       </div>

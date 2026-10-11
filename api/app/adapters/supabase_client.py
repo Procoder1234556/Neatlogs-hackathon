@@ -21,7 +21,8 @@ def get_supabase_mcp_info() -> Dict[str, Any]:
         "supabase_url": settings.SUPABASE_URL,
         "mcp_server_url": mcp_url,
         "features": features,
-        "auth_configured": bool(settings.SUPABASE_KEY),
+        "auth_configured": bool(settings.SUPABASE_KEY or settings.SUPABASE_ACCESS_TOKEN),
+        "access_token_present": bool(settings.SUPABASE_ACCESS_TOKEN),
     }
 
 def verify_supabase_project_link() -> bool:
