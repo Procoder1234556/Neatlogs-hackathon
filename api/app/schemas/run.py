@@ -57,6 +57,7 @@ class RunResponse(BaseModel):
     status: str
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
+    mode: Optional[str] = "live"
     neatlogs_trace_id: Optional[str] = None
     neatlogs_trace_url: Optional[str] = None
     created_at: datetime
@@ -81,6 +82,8 @@ class VerificationResponse(BaseModel):
     id: str
     passed: bool
     unsupported_claims: Optional[List[str]] = None
+    claims_checked: Optional[int] = 3
+    claims_failed: Optional[int] = 0
     quality_score: int
     audit_notes: Optional[str] = None
 
@@ -109,6 +112,7 @@ class CompanyLeadResponse(BaseModel):
     domain: str
     fit_score: int
     score_reason: Optional[str] = None
+    score_breakdown: Optional[Dict[str, Any]] = None
     rank: Optional[int] = None
     status: str
     people: List[PersonResponse] = []
@@ -149,3 +153,27 @@ class RunSummaryResponse(BaseModel):
     avg_fit_score: int
     total_credits_used: float
     total_cost_usd: float
+
+class SourceHealthItem(BaseModel):
+    source: str
+    status: str
+    detail: str
+    checked_at: datetime
+    balance: Optional[float] = None
+
+class SourcesHealthResponse(BaseModel):
+    sources: List[SourceHealthItem]
+
+class PublicSettingsResponse(BaseModel):
+    app_env: str
+    version: str
+    daily_credit_cap: int
+    max_credits_per_run: int
+    target_gross_margin: float
+    bedrock_model_fast: str
+    bedrock_model_strong: str
+
+class FilterSuggestionResponse(BaseModel):
+    field: str
+    query: str
+    suggestions: List[str]

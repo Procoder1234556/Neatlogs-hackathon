@@ -177,10 +177,13 @@ async def add_security_headers(request: Request, call_next):
 
 from api.app.adapters.supabase_client import get_supabase_mcp_info, verify_supabase_project_link
 
+from api.app.routers import runs, events, pricing, system
+
 # Include Routers
 app.include_router(runs.router)
 app.include_router(events.router)
 app.include_router(pricing.router)
+app.include_router(system.router)
 
 @app.get("/health")
 def health_check():
