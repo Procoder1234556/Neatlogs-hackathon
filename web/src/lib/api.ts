@@ -91,6 +91,20 @@ export interface RunDetail {
   mode?: string;
   neatlogs_trace_id?: string;
   neatlogs_trace_url?: string;
+  tool_calls?: Array<{
+    id: string;
+    step_id?: string;
+    tool: string;
+    endpoint?: string;
+    latency_ms: number;
+    tokens_in?: number;
+    tokens_out?: number;
+    cost_usd?: number;
+    status: string;
+    params_snippet?: string;
+    result_snippet?: string;
+    error_message?: string;
+  }>;
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";

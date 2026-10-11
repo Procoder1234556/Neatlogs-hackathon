@@ -543,29 +543,30 @@ export default function Dashboard() {
         }
       ]);
     } else if (eventType === "lead_ready") {
+      const companyName = data?.company_name || data?.name || data?.company || "Target Company";
       setLeads((prev) => {
-        if (prev.some((l) => l.name === data.company_name)) return prev;
+        if (prev.some((l) => l.name === companyName)) return prev;
         const newLead = {
-          id: `c-dyn-${Date.now()}`,
+          id: `c-dyn-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           rank: prev.length + 1,
-          name: data.company_name,
-          domain: `${data.company_name.toLowerCase().replace(/[^a-z0-9]/g, "")}.io`,
-          fitScore: data.fit_score || 92,
-          scoreReason: "Scored and verified via autonomous live pipeline.",
+          name: companyName,
+          domain: `${companyName.toLowerCase().replace(/[^a-z0-9]/g, "")}.io`,
+          fitScore: data?.fit_score || 92,
+          scoreReason: data?.score_reason || "Scored and verified via autonomous live pipeline.",
           decisionMaker: {
-            name: data.person_name || "Alex Chen",
-            title: "VP of Engineering",
+            name: data?.person_name || data?.decision_maker || "Alex Chen",
+            title: data?.title || "VP of Engineering",
             linkedin: "https://linkedin.com",
             highlight: "Decision maker verified with ground-truth facts."
           },
           facts: [
-            { key: "verification", val: data.verified ? "Passed (100%)" : "Audit complete", source: "neatlogs / guardrail" },
-            { key: "fit_score", val: `${data.fit_score || 92}% ICP alignment`, source: "scorer / icp_vector" }
+            { key: "verification", val: data?.verified ? "Passed (100%)" : "Audit complete", source: "neatlogs / guardrail" },
+            { key: "fit_score", val: `${data?.fit_score || 92}% ICP alignment`, source: "scorer / icp_vector" }
           ],
           email: {
-            subject: `Connecting regarding engineering growth at ${data.company_name}`,
-            body: `Hi ${data.person_name ? data.person_name.split(" ")[0] : "there"},\n\nSaw your team at ${data.company_name} is actively expanding engineering infrastructure.\n\nWould love to share how teams streamline deployment guardrails without slowing release velocity.\n\nBest,\nNikunj`,
-            verified: data.verified !== false,
+            subject: `Connecting regarding engineering growth at ${companyName}`,
+            body: `Hi ${data?.person_name ? data.person_name.split(" ")[0] : "there"},\n\nSaw your team at ${companyName} is actively expanding engineering infrastructure.\n\nWould love to share how teams streamline deployment guardrails without slowing release velocity.\n\nBest,\nNikunj`,
+            verified: data?.verified !== false,
             qualityScore: 98,
             unsupportedClaims: 0
           }
@@ -649,13 +650,75 @@ export default function Dashboard() {
           }
         );
 
-        // Active polling loop ensuring resilient fallback sync
+        // Active polling loop ensuring tight backend synchronization
         pollIntervalRef.current = setInterval(async () => {
           try {
             const detail = await fetchRunDetail(newRun.id);
             if (!detail) return;
             setActiveRun(detail);
 
+            // Continuously synchronize beautifului animation with backend steps while running
+            if (detail.steps && detail.steps.length > 0) {
+              const runningStep = detail.steps.find((s: any) => s.status === "running");
+              const lastFinishedStep = [...detail.steps].reverse().find((s: any) => s.status === "done" || s.status === "recovered");
+              const activeStep = runningStep || lastFinishedStep;
+
+              if (activeStep) {
+                if (activeStep.name === "plan") {
+                  setProcessingPhase("churning");
+                  setLifecycleState("thinking");
+                  setActiveAgentName("Planner Agent");
+                  setActiveAgentDetail("Formulating Crustdata search ladder & LLM synthesis cascade...");
+                } else if (activeStep.name === "research") {
+                  setProcessingPhase("tools");
+                  setLifecycleState("tool_execution");
+                  setActiveAgentName("Crustdata Researcher");
+                  setActiveAgentDetail("Executing Crustdata company discovery & executive mapping...");
+                } else if (activeStep.name === "enrich" || activeStep.name === "score") {
+                  setProcessingPhase("tasks");
+                  setLifecycleState("evaluating");
+                  setActiveAgentName("Firmographic Scoring Engine");
+                  setActiveAgentDetail("Evaluating headcount velocity & ICP alignment scores (0..100)...");
+                } else if (activeStep.name === "write" || activeStep.name === "verify") {
+                  setProcessingPhase("streaming");
+                  setLifecycleState("evaluating");
+                  setActiveAgentName("Outreach Synthesizer");
+                  setActiveAgentDetail("Drafting fact-grounded outreach with zero hallucination verification...");
+                }
+              }
+
+              // Update workflow nodes status from backend in real time
+              setWorkflowNodes((prev) =>
+                prev.map((n) => {
+                  const match = detail.steps.find((s: any) => s.name === n.id);
+                  if (match) {
+                    return {
+                      ...n,
+                      status: match.status === "running" ? "active" : match.status === "done" ? "completed" : match.status === "recovered" ? "recovered" : match.status === "failed" ? "failed" : n.status,
+                      detail: match.detail || n.detail,
+                      durationMs: match.duration_ms || n.durationMs
+                    };
+                  }
+                  return n;
+                })
+              );
+            }
+
+            // Sync live tool executions from backend tool calls
+            if (detail.tool_calls && detail.tool_calls.length > 0) {
+              setLiveTools(
+                detail.tool_calls.map((t: any) => ({
+                  id: t.id,
+                  toolName: t.tool,
+                  status: t.status === "ok" ? "success" : t.status,
+                  durationMs: t.latency_ms,
+                  paramsSnippet: t.params_snippet || t.endpoint || "",
+                  resultSnippet: t.result_snippet || ""
+                }))
+              );
+            }
+
+            // Check if backend finished execution
             if (detail.status === "complete") {
               if (pollIntervalRef.current) {
                 clearInterval(pollIntervalRef.current);
@@ -667,7 +730,8 @@ export default function Dashboard() {
               }
               setIsProcessing(false);
               setLifecycleState("completed");
-              setProcessingPhase("approval");
+              setActiveAgentName("ProspectForge Orchestrator");
+              setActiveAgentDetail("Run completed successfully.");
 
               // Refresh list and get delivered leads
               const [leadsData, series, signals, summary, runsList, tools] = await Promise.all([
@@ -706,12 +770,25 @@ export default function Dashboard() {
               if (signals && signals.length > 0) setSignalBars(signals);
               if (summary) setRunSummary(summary);
 
-              if (leadsData && leadsData.length > 0) {
-                const mapped = leadsData.map(mapApiLeadToUI);
-                setLeads(mapped);
-                setViewState("results");
-                setVisibleLeadCount(mapped.length);
-              }
+              // Immediately replace search bar & animation with results view
+              const finalLeads = (leadsData && leadsData.length > 0) ? leadsData.map(mapApiLeadToUI) : leads;
+              setLeads(finalLeads);
+              setViewState("results");
+
+              // Print results one by one with smooth sequential card reveal
+              if (printTimerRef.current) clearInterval(printTimerRef.current);
+              setVisibleLeadCount(0);
+              let count = 0;
+              printTimerRef.current = setInterval(() => {
+                count += 1;
+                setVisibleLeadCount(count);
+                if (count >= finalLeads.length) {
+                  if (printTimerRef.current) {
+                    clearInterval(printTimerRef.current);
+                    printTimerRef.current = null;
+                  }
+                }
+              }, 350);
             } else if (detail.status === "failed") {
               if (pollIntervalRef.current) {
                 clearInterval(pollIntervalRef.current);
@@ -723,7 +800,7 @@ export default function Dashboard() {
           } catch (e) {
             console.error("Run polling error:", e);
           }
-        }, 1200);
+        }, 800);
       }
     } catch (err) {
       console.error("Backend launch deferred, demo interactive flow continues:", err);
