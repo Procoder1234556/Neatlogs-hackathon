@@ -30,3 +30,13 @@ def test_pricing_unit_economics():
     assert pricing.target_gross_margin == 0.75
     assert pricing.computed_price_per_lead == 1.12 or pricing.computed_price_per_lead == 1.15
     assert len(pricing.tiers) >= 3
+
+def test_supabase_mcp_check():
+    from api.app.adapters.supabase_client import get_supabase_mcp_info, verify_supabase_project_link
+    assert verify_supabase_project_link() is True
+    info = get_supabase_mcp_info()
+    assert info["project_ref"] == "jbfyxtbyheyuylptreud"
+    assert "https://jbfyxtbyheyuylptreud.supabase.co" in info["supabase_url"]
+    assert "project_ref=jbfyxtbyheyuylptreud" in info["mcp_server_url"]
+    assert "database" in info["features"]
+    assert "functions" in info["features"]

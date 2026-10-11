@@ -33,4 +33,10 @@ class Settings(BaseSettings):
     DAILY_CREDIT_CAP: int = 5000
     INJECT_FAULT: Optional[str] = None  # empty_search | rate_limit | bad_fact
 
+    # Supabase & MCP Integration
+    SUPABASE_PROJECT_REF: str = "jbfyxtbyheyuylptreud"
+    SUPABASE_URL: str = Field(default_factory=lambda: os.getenv("SUPABASE_URL", "https://jbfyxtbyheyuylptreud.supabase.co"))
+    SUPABASE_KEY: Optional[str] = None
+    SUPABASE_MCP_URL: str = "https://mcp.supabase.com/mcp?project_ref=jbfyxtbyheyuylptreud&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
+
 settings = Settings()

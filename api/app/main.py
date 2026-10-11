@@ -174,6 +174,8 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
+from api.app.adapters.supabase_client import get_supabase_mcp_info, verify_supabase_project_link
+
 # Include Routers
 app.include_router(runs.router)
 app.include_router(events.router)
@@ -186,4 +188,11 @@ def health_check():
         "service": "ProspectForge",
         "version": "1.0.0",
         "environment": settings.APP_ENV
+    }
+
+@app.get("/api/supabase/check")
+def supabase_mcp_check():
+    return {
+        "linked": verify_supabase_project_link(),
+        "info": get_supabase_mcp_info()
     }
