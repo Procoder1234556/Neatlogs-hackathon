@@ -14,8 +14,8 @@ class Settings(BaseSettings):
 
     # neatlogs Telemetry
     NEATLOGS_API_KEY: str = Field(default_factory=lambda: os.getenv("NEATLOGS_API_KEY", "demo-neatlogs-key"))
-    NEATLOGS_WORKFLOW_NAME: str = "prospectforge"
-    NEATLOGS_ENDPOINT: Optional[str] = None
+    NEATLOGS_WORKFLOW_NAME: str = "b2b-prospecting-agent"
+    NEATLOGS_ENDPOINT: Optional[str] = Field(default_factory=lambda: os.getenv("NEATLOGS_ENDPOINT", "https://ingest.neatlogs.com"))
 
     # AWS Bedrock
     AWS_REGION: str = "us-east-1"
