@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ChevronDown, Sparkles, CheckCircle2, Clock } from "lucide-react";
 
-interface StepItem {
+export interface ThinkingStepItem {
   id: string;
   name: string;
   detail?: string;
@@ -12,80 +12,82 @@ interface StepItem {
 
 interface ThinkingStateProps {
   label?: string;
-  steps?: StepItem[];
+  steps?: ThinkingStepItem[];
   defaultExpanded?: boolean;
 }
 
 export default function ThinkingState({
   label = "Reasoning & Pipeline Strategy",
-  steps = [
-    { id: "1", name: "Parse ICP & extract firmographic signals", detail: "Scanned niche criteria for high-growth tech", status: "done" },
-    { id: "2", name: "Execute Crustdata graph query with credit budget guard", detail: "Evaluating candidate companies & funding stages", status: "running" },
-    { id: "3", name: "Audit ground-truth facts against halluncination guardrail", detail: "Verified headcount and hiring signals", status: "queued" }
-  ],
+  steps = [],
   defaultExpanded = true
 }: ThinkingStateProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
-    <div className="w-full rounded-[20px] bg-[#F5F6FA] border border-slate-200/80 p-3.5 transition-all">
+    <div className="w-full rounded-[22px] bg-[#1E1E1E] border border-[#333333] p-3.5 transition-all shadow-sm">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between text-left group"
+        className="flex w-full items-center justify-between text-left group cursor-pointer select-none"
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />
+          <Sparkles className="size-4 text-indigo-400 animate-pulse" />
           <span
             className="text-[13px] font-semibold bg-clip-text text-transparent"
             style={{
-              backgroundImage: "linear-gradient(90deg, #717684 35%, #14161C 50%, #717684 65%)",
+              backgroundImage: "linear-gradient(90deg, #A0A5B5 35%, #FFFFFF 50%, #A0A5B5 65%)",
               backgroundSize: "200% 100%",
-              animation: "shimmer-text 1.4s linear infinite"
+              animation: "shimmer-text 1.6s linear infinite"
             }}
           >
             {label}
           </span>
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-slate-400 transition-transform duration-300 ${
-            expanded ? "rotate-180 text-slate-700" : ""
+          className={`size-4 text-[#8E8E8E] transition-transform duration-300 ${
+            expanded ? "rotate-180 text-white" : ""
           }`}
         />
       </button>
 
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-slate-200/60 relative pl-4">
-          <div className="absolute left-[7px] top-4 bottom-2 w-px bg-slate-200" />
+        <div className="mt-3 pt-3 border-t border-[#2C2C2C] relative pl-4">
+          <div className="absolute left-[7px] top-4 bottom-2 w-px bg-[#333333]" />
           <div className="flex flex-col gap-2.5">
             {steps.map((st) => (
               <div key={st.id} className="relative flex items-start gap-2.5 text-xs">
-                <span className="relative z-10 flex size-3.5 mt-0.5 items-center justify-center rounded-full bg-white ring-2 ring-slate-100">
+                <span className="relative z-10 flex size-3.5 mt-0.5 items-center justify-center rounded-full bg-[#1A1A1A] ring-2 ring-[#2E2E2E]">
                   {st.status === "done" ? (
-                    <span className="size-2 rounded-full bg-emerald-500" />
+                    <span className="size-2 rounded-full bg-emerald-400" />
                   ) : st.status === "running" ? (
-                    <span className="size-2 rounded-full bg-blue-600 animate-ping" />
+                    <span className="size-2 rounded-full bg-indigo-400 animate-ping" />
+                  ) : st.status === "recovering" ? (
+                    <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
                   ) : (
-                    <span className="size-2 rounded-full bg-slate-300" />
+                    <span className="size-2 rounded-full bg-[#484848]" />
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-[#14161C]">{st.name}</span>
+                    <span className="font-medium text-white">{st.name}</span>
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full ${
+                      className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full border ${
                         st.status === "done"
-                          ? "bg-emerald-50 text-emerald-700"
+                          ? "bg-emerald-950/80 text-emerald-300 border-emerald-800/60"
                           : st.status === "running"
-                          ? "bg-blue-50 text-blue-700"
-                          : "text-slate-400"
+                          ? "bg-indigo-950/80 text-indigo-300 border-indigo-700/60 animate-pulse"
+                          : st.status === "recovering"
+                          ? "bg-amber-950/80 text-amber-300 border-amber-700/60"
+                          : "text-[#6E6E6E] border-transparent"
                       }`}
                     >
                       {st.status}
                     </span>
                   </div>
                   {st.detail && (
-                    <p className="text-[11px] text-[#5B6170] mt-0.5">{st.detail}</p>
+                    <p className="text-[11px] text-[#A0A0A0] mt-0.5 font-sans leading-relaxed">
+                      {st.detail}
+                    </p>
                   )}
                 </div>
               </div>

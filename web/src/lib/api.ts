@@ -323,3 +323,76 @@ export async function fetchRunsList(): Promise<any[]> {
   }
 }
 
+export interface ToolCallApiItem {
+  id: string;
+  tool: string;
+  endpoint?: string;
+  status: string;
+  credits_used: number;
+  latency_ms: number;
+  params_snippet?: string;
+  result_snippet?: string;
+  created_at: string;
+}
+
+export async function fetchRunTools(runId: string): Promise<ToolCallApiItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/runs/${runId}/tools`, { cache: "no-store" });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+export function subscribeToRunEvents(
+  runId: string,
+  onEvent: (type: string, data: any) => void,
+  onError?: (err: any) => void
+): () => void {
+  if (typeof window === "undefined" || !window.EventSource) {
+    return () => {};
+  }
+  const url = `${API_BASE}/runs/${runId}/events`;
+  const eventSource = new EventSource(url);
+
+  const eventTypes = [
+    "connected",
+    "step_update",
+    "agent_state",
+    "tool_call",
+    "activity_log",
+    "recovery",
+    "lead_ready",
+    "run_complete"
+  ];
+
+  eventTypes.forEach((type) => {
+    eventSource.addEventListener(type, (event: MessageEvent) => {
+      try {
+        const parsed = JSON.parse(event.data);
+        onEvent(type, parsed);
+      } catch {
+        onEvent(type, event.data);
+      }
+    });
+  });
+
+  eventSource.onmessage = (event) => {
+    try {
+      const parsed = JSON.parse(event.data);
+      onEvent(parsed.type || "message", parsed.data || parsed);
+    } catch {
+      onEvent("message", event.data);
+    }
+  };
+
+  eventSource.onerror = (err) => {
+    if (onError) onError(err);
+  };
+
+  return () => {
+    eventSource.close();
+  };
+}
+

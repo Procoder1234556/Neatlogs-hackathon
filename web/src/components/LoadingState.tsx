@@ -49,9 +49,9 @@ function LoaderGrid({
       {delays.map((delay, index) => (
         <span
           key={index}
-          className={`size-[4px] bg-ink ${round ? "rounded-full" : "rounded-[1px]"}`}
+          className={`size-[4px] bg-blue-400 ${round ? "rounded-full" : "rounded-[1px]"}`}
           style={{
-            opacity: delay === null ? 0.07 : 0.15,
+            opacity: delay === null ? 0.15 : 0.25,
             animation: delay === null ? "none" : `pixel-on ${dur}ms ease-in-out ${delay}ms infinite`,
           }}
         />
@@ -74,10 +74,6 @@ function useElapsed() {
 export default function LoadingState({
   label,
   variant = "Drive",
-  /** the meme feed for the Surfer variant; hosted on Vercel Blob so it plays in
-   *  production (the local /public/subway-surfers.mp4 stays gitignored).
-   *  Heavily compressed (288px, 20fps, no audio → ~265 KB, from 1.1 MB) to keep
-   *  Blob data transfer down. */
   videoSrc = "https://95dnc2a95qgwt9ff.public.blob.vercel-storage.com/subway-surfers-min.mp4",
 }: {
   label?: string;
@@ -92,10 +88,10 @@ export default function LoadingState({
 
   const labelEl = (
     <span
-      className="bg-clip-text text-[13px] font-medium text-transparent"
+      className="bg-clip-text text-[13px] font-semibold text-transparent"
       style={{
         backgroundImage:
-          "linear-gradient(90deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%)",
+          "linear-gradient(90deg, #8E8E8E 35%, #FFFFFF 50%, #8E8E8E 65%)",
         backgroundSize: "200% 100%",
         animation: "shimmer-text 1.4s linear infinite",
       }}
@@ -103,7 +99,7 @@ export default function LoadingState({
       {resolvedLabel}
     </span>
   );
-  const elapsedEl = <span className="font-mono text-[12px] text-ink-3 tabular-nums">{elapsed}</span>;
+  const elapsedEl = <span className="font-mono text-[12px] text-emerald-400 tabular-nums">{elapsed}</span>;
 
   if (surfer) {
     return (

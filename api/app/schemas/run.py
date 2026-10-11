@@ -46,6 +46,17 @@ class RecoveryEventResponse(BaseModel):
     attempt: int
     created_at: datetime
 
+class ToolCallResponse(BaseModel):
+    id: str
+    tool: str
+    endpoint: Optional[str] = None
+    status: str
+    credits_used: float = 0.0
+    latency_ms: int = 0
+    params_snippet: Optional[str] = None
+    result_snippet: Optional[str] = None
+    created_at: datetime
+
 class RunResponse(BaseModel):
     id: str
     niche: str
@@ -66,6 +77,7 @@ class RunDetailResponse(RunResponse):
     plan: Optional[Dict[str, Any]] = None
     steps: List[StepResponse] = []
     recovery_events: List[RecoveryEventResponse] = []
+    tool_calls: List[ToolCallResponse] = []
     leads_count: int = 0
     claims_verified_count: int = 0
     total_credits_used: float = 0.0

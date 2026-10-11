@@ -10,14 +10,14 @@ from sqlalchemy import func
 from api.app.db.session import get_db
 from api.app.db.models import (
     Run, RunStep, Company, Person, Fact, Message,
-    Verification, RecoveryEvent, CostReport
+    Verification, RecoveryEvent, CostReport, ToolCall
 )
 from api.app.schemas.run import (
     RunCreate, RunResponse, RunDetailResponse, StepResponse,
     RecoveryEventResponse, RunEstimateRequest, RunEstimateResponse,
     CompanyLeadResponse, PersonResponse, MessageResponse, FactResponse,
     VerificationResponse, SeriesPoint,
-    SignalDimension, RunSummaryResponse
+    SignalDimension, RunSummaryResponse, ToolCallResponse
 )
 from api.app.agent.orchestrator import orchestrator
 from api.app.config import settings
@@ -130,6 +130,7 @@ def get_run_detail(run_id: str, db: Session = Depends(get_db)):
 
     steps = db.query(RunStep).filter(RunStep.run_id == run_id).all()
     recoveries = db.query(RecoveryEvent).filter(RecoveryEvent.run_id == run_id).all()
+    tools = db.query(ToolCall).filter(ToolCall.run_id == run_id).order_by(ToolCall.created_at.asc()).all()
     cost_report = db.query(CostReport).filter(CostReport.run_id == run_id).first()
     leads_count = db.query(Company).filter(Company.run_id == run_id, Company.status == "selected").count()
     claims_count = db.query(Verification).join(Message).join(Person).join(Company).filter(Company.run_id == run_id, Verification.passed == True).count()
@@ -175,11 +176,43 @@ def get_run_detail(run_id: str, db: Session = Depends(get_db)):
             )
             for r in recoveries
         ],
+        tool_calls=[
+            ToolCallResponse(
+                id=t.id,
+                tool=t.tool,
+                endpoint=t.endpoint,
+                status=t.status,
+                credits_used=float(t.credits_used or 0),
+                latency_ms=t.latency_ms or 0,
+                params_snippet=t.request_hash or t.endpoint or "",
+                result_snippet="ok" if t.status == "ok" else t.status,
+                created_at=t.created_at
+            )
+            for t in tools
+        ],
         leads_count=leads_count,
         claims_verified_count=claims_count,
         total_credits_used=float(cost_report.credits_total) if cost_report else 0.0,
         total_cost_usd=float(cost_report.total_usd) if cost_report else 0.0
     )
+
+@router.get("/{run_id}/tools", response_model=List[ToolCallResponse])
+def get_run_tools(run_id: str, db: Session = Depends(get_db)):
+    tools = db.query(ToolCall).filter(ToolCall.run_id == run_id).order_by(ToolCall.created_at.asc()).all()
+    return [
+        ToolCallResponse(
+            id=t.id,
+            tool=t.tool,
+            endpoint=t.endpoint,
+            status=t.status,
+            credits_used=float(t.credits_used or 0),
+            latency_ms=t.latency_ms or 0,
+            params_snippet=t.request_hash or t.endpoint or "",
+            result_snippet="ok" if t.status == "ok" else t.status,
+            created_at=t.created_at
+        )
+        for t in tools
+    ]
 
 @router.get("/{run_id}/leads", response_model=List[CompanyLeadResponse])
 def get_run_leads(run_id: str, db: Session = Depends(get_db)):
