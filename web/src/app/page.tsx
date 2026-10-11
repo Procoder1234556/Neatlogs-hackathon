@@ -88,6 +88,7 @@ import ToolChips, { ToolCallItem } from "../components/ToolChips";
 import ActivityFeed from "../components/ActivityFeed";
 import AgentStatusBeacon from "../components/AgentStatusBeacon";
 import AgentWorkflowGraph, { WorkflowNode } from "../components/AgentWorkflowGraph";
+import MarketingLanding from "../components/MarketingLanding";
 
 // Initial Telemetry spend data
 const INITIAL_SERIES_DATA = [
@@ -183,6 +184,9 @@ const INITIAL_LEADS = [
 ];
 
 export default function Dashboard() {
+  // Top-level app view: marketing page first, then dashboard
+  const [appView, setAppView] = useState<"marketing" | "dashboard">("marketing");
+
   // Navigation & Layout states
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<"chat" | "work">("chat");
@@ -882,6 +886,12 @@ export default function Dashboard() {
   ];
 
   const selectedLead = leads[selectedLeadIndex] || leads[0];
+
+  // ── MARKETING LANDING PAGE ─────────────────────────────────────────────────
+  if (appView === "marketing") {
+    return <MarketingLanding onOpenDashboard={() => setAppView("dashboard")} />;
+  }
+  // ── END MARKETING PAGE ──────────────────────────────────────────────────────
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#212121] text-[#ECECEC] font-sans antialiased select-none">
