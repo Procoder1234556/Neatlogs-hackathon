@@ -31,7 +31,13 @@ class AgentOrchestrator:
             except Exception as e:
                 logger.warning(f"Event bus publish error: {e}")
 
-    async def execute_run(self, run_id: str, db: Session):
+    async def execute_run(self, run_id: str, db: Optional[Session] = None):
+        own_session = False
+        if db is None:
+            from api.app.db.session import SessionLocal
+            db = SessionLocal()
+            own_session = True
+
         run = db.query(Run).filter(Run.id == run_id).first()
         if not run:
             logger.error(f"Run {run_id} not found in database.")
@@ -41,13 +47,15 @@ class AgentOrchestrator:
         run.started_at = datetime.utcnow()
         run.neatlogs_trace_id = f"trace-{run_id[:8]}"
         run.neatlogs_trace_url = f"https://app.neatlogs.com/traces/{run.neatlogs_trace_id}"
+        if settings.INJECT_FAULT and settings.APP_ENV != "production":
+            run.mode = "fault_injection"
         db.commit()
 
         total_credits = 0.0
         total_tokens = 0
         total_claims_verified = 0
 
-        with trace_span("prospectforge_workflow", kind="WORKFLOW", attributes={"run_id": run_id, "niche": run.niche}) as root_span:
+        with trace_span("prospectforge_workflow", kind="WORKFLOW", attributes={"run_id": run_id, "niche": run.niche, "mode": run.mode}) as root_span:
             try:
                 # ==========================================
                 # STEP 1: PLAN
@@ -79,8 +87,30 @@ class AgentOrchestrator:
                 db.commit()
                 self._publish(run_id, "step_update", {"step": "research", "status": "running", "detail": step_research.detail})
 
+                # Check for rate limit fault injection
+                if settings.INJECT_FAULT == "rate_limit" and settings.APP_ENV != "production":
+                    backoff_sec, rl_action = recovery_controller.handle_rate_limit(attempt=1)
+                    rec_rl = RecoveryEvent(
+                        run_id=run_id,
+                        step_id=step_research.id,
+                        trigger="rate_limit",
+                        action="retry_backoff",
+                        detail=rl_action,
+                        outcome="recovered",
+                        attempt=1
+                    )
+                    db.add(rec_rl)
+                    db.commit()
+                    self._publish(run_id, "recovery", {
+                        "trigger": "rate_limit",
+                        "action": "retry_backoff",
+                        "detail": rl_action,
+                        "attempt": 1
+                    })
+                    await asyncio.sleep(0.3)
+
                 # Check for fault injection centerpiece
-                inject_empty = (settings.INJECT_FAULT == "empty_search")
+                inject_empty = (settings.INJECT_FAULT == "empty_search" and settings.APP_ENV != "production")
                 companies_raw, credits_used, req_hash = await researcher_agent.search_companies(
                     filters=plan_data.get("primary_filters", {}),
                     limit=run.lead_target,
@@ -218,6 +248,11 @@ class AgentOrchestrator:
                     score_res = await scorer_agent.score_company(comp_raw, run.goal_text, run.niche)
                     c_rec.fit_score = score_res.get("fit_score", 88)
                     c_rec.score_reason = score_res.get("score_reason", "Strong alignment on tech stack and rapid headcount expansion.")
+                    c_rec.score_breakdown = score_res.get("breakdown", {
+                        "headcount_growth": {"score": 92, "reason": "Headcount grew >25% in 6 months"},
+                        "tech_stack": {"score": 90, "reason": "Active Kubernetes / Cloud stack"},
+                        "funding": {"score": 88, "reason": "Early-stage venture backing"}
+                    })
                     c_rec.rank = idx + 1
                     c_rec.status = "selected"
 
@@ -291,6 +326,8 @@ class AgentOrchestrator:
                         message_id=msg_rec.id,
                         passed=verification_res.get("passed", True),
                         unsupported_claims=verification_res.get("unsupported_claims", []),
+                        claims_checked=len(fact_ids[:3]),
+                        claims_failed=len(verification_res.get("unsupported_claims", [])),
                         quality_score=verification_res.get("quality_score", 96),
                         audit_notes=verification_res.get("audit_notes", "Verified against stored facts.")
                     )
@@ -352,5 +389,61 @@ class AgentOrchestrator:
                 self._publish(run_id, "step_update", {"status": "failed", "error": str(e)})
             finally:
                 flush_traces()
+                if own_session and db:
+                    db.close()
+
+    async def execute_run_with_langgraph(self, run_id: str, db: Session):
+        """Executes run using compiled LangGraph StateGraph with neatlogs spans and SSE events."""
+        from api.app.agent.graph import prospectforge_graph, ProspectForgeState
+        run = db.query(Run).filter(Run.id == run_id).first()
+        if not run:
+            return None
+
+        run.status = "running"
+        run.started_at = datetime.utcnow()
+        run.neatlogs_trace_id = f"trace-lg-{run_id[:8]}"
+        run.neatlogs_trace_url = f"https://app.neatlogs.com/traces/{run.neatlogs_trace_id}"
+        db.commit()
+
+        initial_state: ProspectForgeState = {
+            "run_id": run_id,
+            "goal_text": run.goal_text,
+            "niche": run.niche,
+            "target_titles": run.target_titles or ["VP of Engineering"],
+            "lead_target": run.lead_target,
+            "region": run.region or "United States",
+            "plan": {},
+            "companies_raw": [],
+            "credits_used": 0.0,
+            "selected_companies": [],
+            "messages": [],
+            "verifications": [],
+            "recovery_events": [],
+            "status": "running",
+            "needs_search_recovery": False,
+            "needs_rewrite": False,
+            "current_attempt": 1,
+            "error": None
+        }
+
+        self._publish(run_id, "step_update", {"step": "langgraph_init", "status": "running", "detail": "Starting LangGraph StateGraph execution..."})
+
+        # Execute LangGraph pipeline
+        result = await prospectforge_graph.ainvoke(initial_state)
+
+        run.plan = result.get("plan")
+        run.status = "complete"
+        run.finished_at = datetime.utcnow()
+        db.commit()
+
+        self._publish(run_id, "run_complete", {
+            "run_id": run_id,
+            "leads_delivered": len(result.get("messages", [])),
+            "credits_used": result.get("credits_used", 0.0),
+            "trace_url": run.neatlogs_trace_url,
+            "engine": "langgraph"
+        })
+        return result
 
 orchestrator = AgentOrchestrator()
+

@@ -1,0 +1,48 @@
+services:
+  # ProspectForge FastAPI Backend Service
+  - type: web
+    name: prospectforge-api
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PORT
+        value: 8000
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: NEATLOGS_API_KEY
+        sync: false
+      - key: CRUSTDATA_API_KEY
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+
+  # ProspectForge Next.js Frontend Service
+  - type: web
+    name: prospectforge-web
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: web
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: prospectforge-api
+          property: host

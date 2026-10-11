@@ -27,6 +27,7 @@ class Run(Base):
     share_expires_at = Column(DateTime, nullable=True)
     neatlogs_trace_id = Column(String(120), nullable=True)
     neatlogs_trace_url = Column(String(255), nullable=True)
+    mode = Column(String(30), nullable=False, default="live")  # live, replay, fault_injection // ponytail: simple string enum
     started_at = Column(DateTime, nullable=True)
     finished_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -68,6 +69,7 @@ class Company(Base):
     domain = Column(String(255), nullable=False)
     fit_score = Column(Integer, default=0)
     score_reason = Column(Text, nullable=True)
+    score_breakdown = Column(JSON, nullable=True)  # {dimension: {score: int, reason: str}} // ponytail: flexible jsonb
     rank = Column(Integer, nullable=True)
     status = Column(String(30), default="candidate")  # candidate, selected, dropped
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -133,6 +135,8 @@ class Verification(Base):
     message_id = Column(String(36), ForeignKey("messages.id"), nullable=False, index=True)
     passed = Column(Boolean, nullable=False)
     unsupported_claims = Column(JSON, nullable=True)  # list of strings
+    claims_checked = Column(Integer, default=3)
+    claims_failed = Column(Integer, default=0)
     quality_score = Column(Integer, default=100)
     audit_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -209,5 +213,23 @@ class SourceHealth(Base):
     id = Column(String(36), primary_key=True, default=generate_uuid)
     provider = Column(String(40), nullable=False, unique=True)  # Crustdata, neatlogs, AWS Bedrock
     status = Column(String(20), nullable=False, default="healthy")  # healthy, degraded, down
+    detail = Column(Text, nullable=True)
     latency_p50_ms = Column(Integer, default=120)
     last_checked_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Setting(Base):
+    __tablename__ = "settings"
+
+    key = Column(String(80), primary_key=True)
+    value = Column(JSON, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AccountPriceCache(Base):
+    __tablename__ = "account_price_cache"
+
+    endpoint = Column(String(120), primary_key=True)
+    payload = Column(JSON, nullable=False)
+    fetched_at = Column(DateTime, default=datetime.utcnow)
+

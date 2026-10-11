@@ -7,6 +7,7 @@
   --surface-sunken: #F0F2F7;
   --divider: #E1E3EA;
   --ink: #14161C;
+  --ink-3: #717684;
   --ink-muted: #5B6170;
   --ink-faint: #9096A5;
   --primary: #2F6BF0;
@@ -17,6 +18,8 @@
   --warning: #B45309;
   --danger: #C2352B;
   --neutral: #6B7280;
+  --tooltip-bg: #1E2028;
+  --tooltip-muted: #9096A5;
 }
 
 body {
@@ -30,3 +33,41 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+.bg-ink {
+  background-color: var(--ink);
+}
+
+.text-ink-3 {
+  color: var(--ink-3);
+}
+
+@keyframes pixel-on {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes shimmer-text {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+

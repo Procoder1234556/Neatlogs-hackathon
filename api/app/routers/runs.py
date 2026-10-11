@@ -65,7 +65,7 @@ def create_run(
     db.refresh(new_run)
 
     # Launch asynchronous background run execution
-    bg_tasks.add_task(orchestrator.execute_run, new_run.id, db)
+    bg_tasks.add_task(orchestrator.execute_run, new_run.id)
 
     return RunResponse(
         id=new_run.id,
@@ -76,6 +76,7 @@ def create_run(
         lead_target=new_run.lead_target,
         credit_budget=new_run.credit_budget,
         status=new_run.status,
+        mode=new_run.mode,
         created_at=new_run.created_at
     )
 
@@ -92,6 +93,7 @@ def list_runs(db: Session = Depends(get_db)):
             lead_target=r.lead_target,
             credit_budget=r.credit_budget,
             status=r.status,
+            mode=r.mode or "live",
             started_at=r.started_at,
             finished_at=r.finished_at,
             neatlogs_trace_id=r.neatlogs_trace_id,
@@ -141,6 +143,7 @@ def get_run_detail(run_id: str, db: Session = Depends(get_db)):
         lead_target=run.lead_target,
         credit_budget=run.credit_budget,
         status=run.status,
+        mode=run.mode or "live",
         plan=run.plan,
         started_at=run.started_at,
         finished_at=run.finished_at,
@@ -207,6 +210,8 @@ def get_run_leads(run_id: str, db: Session = Depends(get_db)):
                         id=ver.id,
                         passed=ver.passed,
                         unsupported_claims=ver.unsupported_claims,
+                        claims_checked=ver.claims_checked if hasattr(ver, 'claims_checked') else 3,
+                        claims_failed=ver.claims_failed if hasattr(ver, 'claims_failed') else 0,
                         quality_score=ver.quality_score,
                         audit_notes=ver.audit_notes
                     ) if ver else None
@@ -228,6 +233,7 @@ def get_run_leads(run_id: str, db: Session = Depends(get_db)):
             domain=c.domain,
             fit_score=c.fit_score,
             score_reason=c.score_reason,
+            score_breakdown=c.score_breakdown if hasattr(c, 'score_breakdown') else None,
             rank=c.rank,
             status=c.status,
             people=people_res,
