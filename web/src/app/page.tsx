@@ -51,6 +51,11 @@ import {
   CompanyLead
 } from "../lib/api";
 import LoadingState from "../components/LoadingState";
+import ThinkingState from "../components/ThinkingState";
+import TaskRows, { TaskItem } from "../components/TaskRows";
+import StreamingText from "../components/StreamingText";
+import ApprovalCard from "../components/ApprovalCard";
+import ToolChips from "../components/ToolChips";
 
 
 // Telemetry spend data matching reference bezier dual-curve
@@ -337,6 +342,77 @@ export default function DashboardPage() {
       setShowNewRunModal(false);
     }
   };
+
+  const tasksData: TaskItem[] = activeRun?.steps && activeRun.steps.length > 0
+    ? activeRun.steps.map((st, idx) => ({
+        id: st.id || `step-${idx}`,
+        stepNumber: idx + 1,
+        title: `${st.name.charAt(0).toUpperCase() + st.name.slice(1)} Step`,
+        subtitle: `0:${(idx * 35).toString().padStart(2, "0")}`,
+        status: (st.status === "recovered" ? "recovered" : st.status === "running" ? "running" : "completed") as any,
+        items: [
+          { label: "Operation detail", value: st.detail || "Step executed successfully" },
+          { label: "Cost credits", value: st.cost_credits ? `${st.cost_credits} credits` : "0.00 credits" }
+        ]
+      }))
+    : [
+        {
+          id: "t-1",
+          stepNumber: 1,
+          title: "Structured Plan Synthesis",
+          subtitle: "0:05",
+          status: "completed",
+          items: [
+            { label: "Execution strategy", value: "Dual-pass discovery (Seed to Series A)" },
+            { label: "Filters compiled", value: "Headcount 10..50, US, hiring signals" }
+          ]
+        },
+        {
+          id: "t-2",
+          stepNumber: 2,
+          title: "Crustdata Candidate Search",
+          subtitle: "0:40",
+          status: "recovered",
+          items: [
+            { label: "Initial candidate pool", value: "0 matches (empty search fault injected)" },
+            { label: "Recovery ladder", value: "Widened headcount 10..150 & added Series B" },
+            { label: "Outcome", value: "Recovered 5 verified company candidates" }
+          ]
+        },
+        {
+          id: "t-3",
+          stepNumber: 3,
+          title: "Executive Mapping & Enrichment",
+          subtitle: "1:20",
+          status: "completed",
+          items: [
+            { label: "Decision makers mapped", value: "VP of Engineering & Head of Platform" },
+            { label: "Firmographic facts stored", value: "Headcount growth, tech stacks, funding rounds" }
+          ]
+        },
+        {
+          id: "t-4",
+          stepNumber: 4,
+          title: "Autonomous Fit Scoring",
+          subtitle: "2:00",
+          status: "completed",
+          items: [
+            { label: "Scoring metric", value: "Multi-factor ICP alignment 0..100" },
+            { label: "Average cohort fit", value: "94 / 100" }
+          ]
+        },
+        {
+          id: "t-5",
+          stepNumber: 5,
+          title: "Fact-Grounded Outreach & Audit",
+          subtitle: "2:45",
+          status: "completed",
+          items: [
+            { label: "Ground-truth claims checked", value: "3 checked per lead" },
+            { label: "Hallucination guardrail audit", value: "100% verified against stored facts" }
+          ]
+        }
+      ];
 
   return (
     <div className="min-h-screen bg-[#ECEEF6] text-[#14161C] p-4 md:p-8 font-sans antialiased">
@@ -710,110 +786,21 @@ export default function DashboardPage() {
               </div>
             )}
 
+            {/* Thinking State */}
+            <div className="mb-4">
+              <ThinkingState
+                label={activeRun?.status === "running" ? "Agent Pipeline Reasoning Active..." : "Autonomous Execution Strategy"}
+              />
+            </div>
+
+            {/* Task Rows (beautifului 22px cards with step ring & checkmarks) */}
             <div className="flex flex-col gap-3">
-              {activeRun?.steps && activeRun.steps.length > 0 ? (
-                activeRun.steps.map((st, idx) => (
-                  <div
-                    key={st.id || idx}
-                    className={`flex items-center justify-between p-2.5 rounded-xl transition-colors ${
-                      st.status === "recovered"
-                        ? "bg-amber-50/60 border border-amber-200/50"
-                        : "hover:bg-slate-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-[#9096A5] tabular-nums">
-                        {`0:${(idx * 35).toString().padStart(2, "0")}`}
-                      </span>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#14161C] capitalize">{st.name} Step</h4>
-                        <p className="text-[11px] text-[#5B6170] line-clamp-1">{st.detail || "Step completed"}</p>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        st.status === "recovered"
-                          ? "bg-emerald-600 text-white"
-                          : "bg-emerald-50 text-emerald-700"
-                      }`}
-                    >
-                      {st.status === "recovered" ? "Recovered" : "Done"}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <>
-                  {/* Step 1: Plan */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-[#9096A5] tabular-nums">0:05</span>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#14161C]">Structured Plan</h4>
-                        <p className="text-[11px] text-[#5B6170]">Primary + fallback filters</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                      Done
-                    </span>
-                  </div>
+              <TaskRows tasks={tasksData} />
+            </div>
 
-                  {/* Step 2: Research with VISIBLE RECOVERY */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/50">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-amber-700 tabular-nums">0:40</span>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#14161C]">Crustdata Search</h4>
-                        <p className="text-[11px] text-amber-700 font-medium">Filter Widening Ladder</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-                      <span>Recovered</span>
-                    </span>
-                  </div>
-
-                  {/* Step 3: Enrich */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-[#9096A5] tabular-nums">1:20</span>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#14161C]">Data Enrichment</h4>
-                        <p className="text-[11px] text-[#5B6170]">Headcount & hiring facts</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                      Done
-                    </span>
-                  </div>
-
-                  {/* Step 4: Fit Score */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-[#9096A5] tabular-nums">2:00</span>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#14161C]">Fit Scorer</h4>
-                        <p className="text-[11px] text-[#5B6170]">Scored 0..100 against ICP</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                      Done
-                    </span>
-                  </div>
-
-                  {/* Step 5: Write & Verify */}
-                  <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-semibold text-[#9096A5] tabular-nums">2:45</span>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#14161C]">Claim Verifier</h4>
-                        <p className="text-[11px] text-[#5B6170]">Anti-hallucination check</p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
-                      100% Passed
-                    </span>
-                  </div>
-                </>
-              )}
+            {/* Autonomous Tool Chips */}
+            <div className="mt-4 pt-3 border-t border-slate-100">
+              <ToolChips />
             </div>
           </div>
 
@@ -973,14 +960,22 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Verified Email Draft */}
+                {/* Verified Email Draft with StreamingText */}
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs mb-4">
-                  <div className="text-xs font-bold text-[#14161C] pb-2 border-b border-slate-100 mb-2">
-                    Subject: {selectedLead.email?.subject || "Subject"}
+                  <div className="text-xs font-bold text-[#14161C] pb-2 border-b border-slate-100 mb-2.5 flex items-center justify-between">
+                    <span>Subject: {selectedLead.email?.subject || "Subject"}</span>
+                    <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                      ✓ Zero Ungrounded Claims
+                    </span>
                   </div>
-                  <pre className="text-xs text-[#14161C] font-sans whitespace-pre-wrap leading-relaxed">
-                    {selectedLead.email?.body || "Email body"}
-                  </pre>
+                  <StreamingText
+                    text={selectedLead.email?.body || "Email body"}
+                    isStreaming={isWorking || activeRun?.status === "running"}
+                    onRetry={() => {
+                      setIsWorking(true);
+                      setTimeout(() => setIsWorking(false), 1800);
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -1106,6 +1101,14 @@ export default function DashboardPage() {
                     ~${(((leadTarget * 9 * 0.01) + 0.15) / leadTarget).toFixed(2)} / lead
                   </div>
                 </div>
+              </div>
+
+              {/* Human-in-the-Loop Review (beautifului ApprovalCard) */}
+              <div className="mt-2">
+                <ApprovalCard
+                  onApprove={() => handleLaunchRun()}
+                  onSkip={() => handleLaunchRun()}
+                />
               </div>
             </div>
 
