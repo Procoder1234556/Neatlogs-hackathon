@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from api.app.config import settings
 from api.app.db.session import engine, Base, SessionLocal
 from api.app.db.models import Run, RunStep, Company, Person, Fact, Message, Verification, CostReport, RecoveryEvent
-from api.app.adapters.tracing import flush_traces, shutdown_traces
+from api.app.adapters.tracing import flush_traces, shutdown_traces, init_tracing
 from api.app.routers import runs, events, pricing
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -141,7 +141,8 @@ def seed_demo_run():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: ensure tables exist and seed demo run
+    # Startup: initialize telemetry, ensure tables exist and seed demo run
+    init_tracing()
     Base.metadata.create_all(bind=engine)
     seed_demo_run()
     yield

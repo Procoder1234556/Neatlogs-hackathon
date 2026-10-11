@@ -8,23 +8,33 @@ logger = logging.getLogger("prospectforge.tracing")
 
 _neatlogs_initialized = False
 
-try:
-    import neatlogs
-    if settings.NEATLOGS_API_KEY and settings.NEATLOGS_API_KEY != "demo-neatlogs-key":
-        init_kwargs = {
-            "api_key": settings.NEATLOGS_API_KEY,
-            "workflow_name": settings.NEATLOGS_WORKFLOW_NAME,
-        }
-        if settings.NEATLOGS_ENDPOINT:
-            init_kwargs["endpoint"] = settings.NEATLOGS_ENDPOINT
-        neatlogs.init(**init_kwargs)
-        _neatlogs_initialized = True
-        logger.info("neatlogs telemetry initialized successfully.")
-    else:
-        logger.info("neatlogs running in local mock/offline mode.")
-except Exception as e:
-    logger.warning(f"neatlogs initialization deferred or running in local mode: {e}")
-    neatlogs = None
+def init_tracing() -> bool:
+    global _neatlogs_initialized
+    if _neatlogs_initialized:
+        return True
+    try:
+        import neatlogs
+        api_key = settings.NEATLOGS_API_KEY or os.getenv("NEATLOGS_API_KEY")
+        if api_key and api_key != "demo-neatlogs-key":
+            init_kwargs = {
+                "api_key": api_key,
+                "workflow_name": settings.NEATLOGS_WORKFLOW_NAME,
+            }
+            endpoint = settings.NEATLOGS_ENDPOINT or os.getenv("NEATLOGS_ENDPOINT")
+            if endpoint:
+                init_kwargs["endpoint"] = endpoint
+            neatlogs.init(**init_kwargs)
+            _neatlogs_initialized = True
+            logger.info("neatlogs telemetry initialized successfully.")
+            return True
+        else:
+            logger.info("neatlogs running in local mock/offline mode.")
+    except Exception as e:
+        logger.warning(f"neatlogs initialization deferred or running in local mode: {e}")
+    return False
+
+# Eager attempt on module load
+init_tracing()
 
 
 class DummySpan:
