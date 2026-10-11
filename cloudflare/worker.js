@@ -6,6 +6,8 @@
  * Neatlogs telemetry spans, and verifiable claim verification.
  */
 
+import { getFrontendHtml } from "./frontend.js";
+
 // In-memory run cache fallback if KV is cold or local
 const MEMORY_RUNS = new Map();
 const MEMORY_LEADS = new Map();
@@ -417,6 +419,17 @@ export default {
 
     const url = new URL(request.url);
     const path = url.pathname;
+
+    // Root and Web routes: Serve full-stack frontend client SPA
+    if (path === "/" || (!path.startsWith("/api") && path !== "/health" && path !== "/healthz")) {
+      return new Response(getFrontendHtml(), {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "public, max-age=60",
+          ...corsHeaders
+        }
+      });
+    }
 
     // 1. Health check
     if (path === "/health" || path === "/healthz") {
