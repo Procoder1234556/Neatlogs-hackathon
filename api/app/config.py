@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     CRUSTDATA_API_VERSION: str = "2025-11-01"
     CRUSTDATA_BASE_URL: str = "https://api.crustdata.com"
 
+    # Firecrawl Web Intelligence Fallback
+    FIRECRAWL_API_KEY: Optional[str] = Field(default_factory=lambda: os.getenv("FIRECRAWL_API_KEY"))
+    FIRECRAWL_BASE_URL: str = "https://api.firecrawl.dev/v1"
+
     # Safety, Budget & Fault Injection
     MAX_CREDITS_PER_RUN: int = 500
     DAILY_CREDIT_CAP: int = 5000

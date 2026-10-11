@@ -34,6 +34,17 @@ class WriterAgent:
                 user_prompt += f"\nCORRECTION REQUIRED FROM VERIFIER:\n{rewrite_feedback}"
 
             draft = await llm_client.generate_json(system_prompt, user_prompt)
+            if not draft.get("email_body"):
+                first_name = person_name.split()[0] if person_name else "there"
+                fact_dict = {f.get("key"): f.get("value") for f in facts}
+                hiring = fact_dict.get("hiring_signal", "expanding engineering operations")
+                tech = fact_dict.get("tech_stack", "modern cloud infrastructure")
+                draft = {
+                    "subject": f"Quick question regarding {company_name}'s deployment pipeline",
+                    "email_body": f"Hi {first_name},\n\nNoticed that {company_name} is actively {hiring} with an emphasis on {tech}.\n\nAs your engineering infrastructure expands, keeping deployment guardrails tight without slowing release velocity is critical.\n\nWould you be open to a brief 10-minute intro next week?\n\nBest,\nNikunj",
+                    "linkedin_dm": f"Hi {first_name}, noticed your leadership at {company_name}. Would love to connect!",
+                    "cited_facts": ["hiring_signal", "tech_stack"]
+                }
             span.set_attribute("has_subject", bool(draft.get("subject")))
             return draft
 

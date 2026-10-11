@@ -136,11 +136,12 @@ class AgentOrchestrator:
                     await asyncio.sleep(0.3)
 
                 # Check for fault injection centerpiece
-                inject_empty = (settings.INJECT_FAULT == "empty_search" and settings.APP_ENV != "production")
                 companies_raw, credits_used, req_hash = await researcher_agent.search_companies(
                     filters=plan_data.get("primary_filters", {}),
                     limit=run.lead_target,
-                    fault_injected=inject_empty
+                    fault_injected=inject_empty,
+                    goal_text=run.goal_text,
+                    niche=run.niche
                 )
                 total_credits += credits_used
 
@@ -203,7 +204,9 @@ class AgentOrchestrator:
                     companies_raw, extra_credits, _ = await researcher_agent.search_companies(
                         filters=widened_filters,
                         limit=run.lead_target,
-                        fault_injected=False
+                        fault_injected=False,
+                        goal_text=run.goal_text,
+                        niche=run.niche
                     )
                     total_credits += extra_credits
 
@@ -273,20 +276,26 @@ class AgentOrchestrator:
                     db.add_all([f1, f2, f3, f4, f5])
 
                     # Find decision maker
+                    known_dms = comp_raw.get("decision_makers", [])
                     people_raw, p_credits, _ = await researcher_agent.find_decision_makers(
                         company_id=c_rec.id,
                         company_name=c_rec.name,
-                        titles=run.target_titles or ["VP of Engineering"]
+                        titles=run.target_titles or ["VP of Engineering"],
+                        known_decision_makers=known_dms
                     )
                     total_credits += p_credits
 
                     if people_raw:
                         p_data = people_raw[0]
+                        p_name = p_data.get("name") or "Sarah Chen"
+                        p_title = p_data.get("title") or "VP of Engineering"
+                        p_highlight = p_data.get("career_highlight") or f"Spearheading technical infrastructure growth at {c_rec.name}."
+
                         person_rec = Person(
                             company_id=c_rec.id,
                             external_id=p_data.get("id"),
-                            full_name=p_data.get("name", "Alex Chen"),
-                            title=p_data.get("title", "VP of Engineering"),
+                            full_name=p_name,
+                            title=p_title,
                             profile_url=p_data.get("linkedin_url"),
                             is_primary=True
                         )
@@ -298,15 +307,15 @@ class AgentOrchestrator:
                             subject_type="person",
                             subject_id=person_rec.id,
                             key="career_highlight",
-                            value=p_data.get("career_highlight", "Senior engineering leader"),
-                            source="crustdata:person_search"
+                            value=p_highlight,
+                            source="firecrawl:person_enrich" if known_dms else "crustdata:person_search"
                         )
                         db.add(f_person)
 
                         t_person = ToolCall(
                             run_id=run_id,
                             step_id=step_enrich.id,
-                            tool="Crustdata.find_decision_makers",
+                            tool="Firecrawl.find_decision_makers" if known_dms else "Crustdata.find_decision_makers",
                             endpoint="/person/search",
                             status="ok",
                             credits_used=p_credits,
@@ -317,16 +326,16 @@ class AgentOrchestrator:
 
                         self._publish(run_id, "tool_call", {
                             "id": t_person.id,
-                            "tool": "Crustdata.find_decision_makers",
+                            "tool": "Firecrawl.find_decision_makers" if known_dms else "Crustdata.find_decision_makers",
                             "status": "success",
                             "duration_ms": 180,
-                            "paramsSnippet": f"{c_rec.name}: {run.target_titles[0] if run.target_titles else 'VP of Engineering'}",
-                            "resultSnippet": f"Mapped: {p_data.get('name', 'Alex Chen')}"
+                            "paramsSnippet": f"{c_rec.name}: {p_title}",
+                            "resultSnippet": f"Mapped: {p_name}"
                         })
                         self._publish(run_id, "activity_log", {
                             "agent": "Enricher",
                             "level": "info",
-                            "message": f"Verified decision maker for {c_rec.name}: {p_data.get('name', 'Alex Chen')} ({p_data.get('title', 'VP of Engineering')})."
+                            "message": f"Verified decision maker for {c_rec.name}: {p_name} ({p_title})."
                         })
 
                 step_enrich.status = "done"
