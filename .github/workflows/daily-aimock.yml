@@ -1,17 +1,2 @@
-name: Daily aimock
-
-on:
-  schedule:
-    - cron: "0 0 * * *"
-  workflow_dispatch:
-
-jobs:
-  aimock:
-    name: Run aimock
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup aimock
-        uses: CopilotKit/aimock@v1.45.0
+- name: Setup aimock
+  uses: CopilotKit/aimock@v1.45.0
