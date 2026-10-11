@@ -6,6 +6,11 @@ from api.app.config import settings
 
 logger = logging.getLogger("prospectforge.tracing")
 
+try:
+    import neatlogs
+except ImportError:
+    neatlogs = None
+
 _neatlogs_initialized = False
 
 def init_tracing() -> bool:

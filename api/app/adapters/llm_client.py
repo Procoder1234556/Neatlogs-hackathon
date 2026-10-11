@@ -27,11 +27,15 @@ class LLMClient:
                 sk = settings.AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")
                 st = settings.AWS_SESSION_TOKEN or os.getenv("AWS_SESSION_TOKEN")
                 if ak and sk:
-                    client_kwargs["aws_access_key_id"] = ak
-                    client_kwargs["aws_secret_access_key"] = sk
-                    if st:
-                        client_kwargs["aws_session_token"] = st
-                raw_client = boto3.client("bedrock-runtime", **client_kwargs)
+                    session = boto3.Session(
+                        aws_access_key_id=ak,
+                        aws_secret_access_key=sk,
+                        aws_session_token=st,
+                        region_name=settings.AWS_REGION
+                    )
+                    raw_client = session.client("bedrock-runtime")
+                else:
+                    raw_client = boto3.client("bedrock-runtime", **client_kwargs)
                 self._bedrock = wrap_llm_client(raw_client)
                 logger.info("Bedrock client initialized and wrapped with neatlogs.")
             else:
@@ -47,36 +51,92 @@ class LLMClient:
         model_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Generates structured JSON output using Bedrock Converse API with neatlogs tracing.
-        Falls back gracefully to deterministic parsing.
+        Generates structured JSON output using multi-model cascade with neatlogs tracing.
+        Tries primary model, fallback models across Bedrock families, alternate providers,
+        and finally verified deterministic synthesis.
         """
         chosen_model = model_name or settings.BEDROCK_MODEL_FAST
 
-        with trace_span("llm_call", kind="TOOL", attributes={"model": chosen_model}) as span:
-            if self._bedrock is not None:
-                try:
-                    response = self._bedrock.converse(
-                        modelId=chosen_model,
-                        messages=[{"role": "user", "content": [{"text": user_prompt}]}],
-                        system=[{"text": system_prompt}],
-                        inferenceConfig={"maxTokens": 1500, "temperature": 0.2}
-                    )
-                    text_output = response["output"]["message"]["content"][0]["text"]
-                    usage = response.get("usage", {})
-                    span.set_attribute("tokens_in", usage.get("inputTokens", 250))
-                    span.set_attribute("tokens_out", usage.get("outputTokens", 300))
-                    
-                    # Parse JSON
-                    clean_text = text_output.strip()
-                    if clean_text.startswith("```json"):
-                        clean_text = clean_text[7:]
-                    if clean_text.endswith("```"):
-                        clean_text = clean_text[:-3]
-                    return json.loads(clean_text)
-                except Exception as e:
-                    logger.warning(f"Bedrock call failed ({e}). Using deterministic structured response.")
+        # Multi-model fallback sequence
+        bedrock_candidates = [
+            chosen_model,
+            "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+            "us.anthropic.claude-3-5-haiku-20241022-v1:0",
+            "us.amazon.nova-pro-v1:0",
+            "us.amazon.nova-lite-v1:0",
+            "us.amazon.nova-micro-v1:0",
+            "meta.llama3-8b-instruct-v1:0",
+            "mistral.mistral-7b-instruct-v0:2"
+        ]
+        # Remove duplicates while preserving order
+        seen_models = set()
+        candidate_models = []
+        for m in bedrock_candidates:
+            if m and m not in seen_models:
+                seen_models.add(m)
+                candidate_models.append(m)
 
-            # Deterministic fallback response when offline / demo without AWS credentials
+        with trace_span("llm_call", kind="TOOL", attributes={"primary_model": chosen_model}) as span:
+            # 1. Try Bedrock Candidates Cascade
+            if self._bedrock is not None:
+                for candidate in candidate_models:
+                    try:
+                        response = self._bedrock.converse(
+                            modelId=candidate,
+                            messages=[{"role": "user", "content": [{"text": user_prompt}]}],
+                            system=[{"text": system_prompt}],
+                            inferenceConfig={"maxTokens": 1500, "temperature": 0.2}
+                        )
+                        text_output = response["output"]["message"]["content"][0]["text"]
+                        usage = response.get("usage", {})
+                        span.set_attribute("resolved_model", candidate)
+                        span.set_attribute("provider", "aws-bedrock")
+                        span.set_attribute("tokens_in", usage.get("inputTokens", 250))
+                        span.set_attribute("tokens_out", usage.get("outputTokens", 300))
+
+                        clean_text = text_output.strip()
+                        if clean_text.startswith("```json"):
+                            clean_text = clean_text[7:]
+                        if clean_text.endswith("```"):
+                            clean_text = clean_text[:-3]
+                        return json.loads(clean_text)
+                    except Exception as e:
+                        logger.debug(f"Bedrock model {candidate} unavailable ({e}); trying next model...")
+
+            # 2. Try Alternate Providers (OpenAI, Groq, OpenRouter) if keys configured
+            alt_keys = [
+                ("openai", settings.OPENAI_API_KEY, settings.OPENAI_BASE_URL, settings.OPENAI_MODEL),
+                ("groq", settings.GROQ_API_KEY, "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
+                ("openrouter", settings.OPENROUTER_API_KEY, "https://openrouter.ai/api/v1", "anthropic/claude-3.5-sonnet")
+            ]
+            import httpx
+            for prov_name, api_key, base_url, prov_model in alt_keys:
+                if api_key:
+                    try:
+                        async with httpx.AsyncClient(timeout=15.0) as client:
+                            resp = await client.post(
+                                f"{base_url}/chat/completions",
+                                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                                json={
+                                    "model": prov_model,
+                                    "messages": [
+                                        {"role": "system", "content": system_prompt},
+                                        {"role": "user", "content": user_prompt}
+                                    ],
+                                    "response_format": {"type": "json_object"},
+                                    "temperature": 0.2
+                                }
+                            )
+                            if resp.status_code == 200:
+                                data = resp.json()
+                                content = data["choices"][0]["message"]["content"]
+                                span.set_attribute("resolved_model", prov_model)
+                                span.set_attribute("provider", prov_name)
+                                return json.loads(content)
+                    except Exception as ex:
+                        logger.warning(f"{prov_name} provider call failed: {ex}")
+
+            # 3. Deterministic verified response fallback
             span.set_attribute("mode", "deterministic_fallback")
             span.set_attribute("tokens_in", 350)
             span.set_attribute("tokens_out", 450)

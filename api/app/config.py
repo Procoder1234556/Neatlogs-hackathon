@@ -4,7 +4,11 @@ from typing import Optional
 import os
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=[".env", "api/.env", os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")],
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
     # Service & Auth
     APP_ENV: str = "development"
@@ -25,6 +29,13 @@ class Settings(BaseSettings):
     AWS_BEARER_TOKEN_BEDROCK: Optional[str] = None
     BEDROCK_MODEL_STRONG: str = "anthropic.claude-3-5-sonnet-20241022-v2:0"
     BEDROCK_MODEL_FAST: str = "anthropic.claude-3-5-haiku-20241022-v1:0"
+
+    # Multi-Model & Alternate Providers Fallback
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_BASE_URL: str = "https://api.openai.com/v1"
+    OPENAI_MODEL: str = "gpt-4o-mini"
+    GROQ_API_KEY: Optional[str] = None
+    OPENROUTER_API_KEY: Optional[str] = None
 
     # Crustdata REST API
     CRUSTDATA_API_KEY: Optional[str] = Field(default_factory=lambda: os.getenv("CRUSTDATA_API_KEY", "demo-crustdata-key"))

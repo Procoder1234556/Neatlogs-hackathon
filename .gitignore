@@ -15,6 +15,7 @@ __pycache__/
 htmlcov/
 *.egg-info/
 .eggs/
+*.db
 
 # Next.js / Web build artifacts
 web/.next/
@@ -32,6 +33,13 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .vercel
+
+# Local agent & IDE hooks
+.claude/
+.codex/
+.cursor/
+.factory/
+.github/hooks/
 
 # Environment & local secrets
 .env
