@@ -75,7 +75,7 @@ def get_sources_health():
 
 @router.get("/settings/public", response_model=PublicSettingsResponse)
 def get_public_settings():
-    """Non-sensitive settings, caps, and model labels."""
+    """Non-sensitive settings, caps, model labels, and client resilience parameters."""
     return PublicSettingsResponse(
         app_env=settings.APP_ENV,
         version="1.0.0",
@@ -83,7 +83,8 @@ def get_public_settings():
         max_credits_per_run=settings.MAX_CREDITS_PER_RUN,
         target_gross_margin=0.75,
         bedrock_model_fast=settings.BEDROCK_MODEL_FAST,
-        bedrock_model_strong=settings.BEDROCK_MODEL_STRONG
+        bedrock_model_strong=settings.BEDROCK_MODEL_STRONG,
+        max_poll_duration_seconds=settings.MAX_POLL_DURATION_SECONDS
     )
 
 @router.get("/filters/suggest", response_model=FilterSuggestionResponse)

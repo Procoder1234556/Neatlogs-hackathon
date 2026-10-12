@@ -60,4 +60,24 @@ class Settings(BaseSettings):
     SUPABASE_ACCESS_TOKEN: Optional[str] = None
     SUPABASE_MCP_URL: str = "https://mcp.supabase.com/mcp?project_ref=jbfyxtbyheyuylptreud&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
 
+    # CORS — comma-separated allowed origins. Set CORS_ORIGINS in .env for each environment.
+    # ponytail: single env var, no parsing library
+    CORS_ORIGINS: str = Field(
+        default_factory=lambda: os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:3000,http://127.0.0.1:3000,https://neatlogs-hackathon.p03490978.workers.dev"
+        )
+    )
+
+    # Resilience knobs — all overridable per environment
+    RUN_TIMEOUT_SECONDS: int = 300         # hard wall for execute_run background task
+    SSE_KEEPALIVE_SECONDS: float = 15.0   # SSE comment keepalive interval
+    SSE_MAX_IDLE_SECONDS: float = 360.0   # close idle SSE stream after this long with no events
+    MAX_POLL_DURATION_SECONDS: int = 360  # frontend poll timeout communicated via /settings/public
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Returns CORS_ORIGINS as a deduplicated list, stripping whitespace."""
+        return list(dict.fromkeys(o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()))
+
 settings = Settings()
