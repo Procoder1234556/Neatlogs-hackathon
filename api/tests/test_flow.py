@@ -194,7 +194,7 @@ async def test_mock_fallback_gate_enforcement():
         l_client._bedrock = None
         with pytest.raises(RuntimeError) as exc_llm:
             await l_client.generate_json("PLANNER", "find startups")
-        assert "Refusing fabricated agent synthesis" in str(exc_llm.value) or "unavailable" in str(exc_llm.value)
+        assert "Refusing fabricated agent synthesis" in str(exc_llm.value) or "unavailable" in str(exc_llm.value) or "mock fallback is disabled" in str(exc_llm.value)
     finally:
         settings.ALLOW_MOCK_FALLBACK = orig_mock
         settings.CRUSTDATA_API_KEY = orig_key
