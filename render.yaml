@@ -1,24 +1,31 @@
 services:
-  # ProspectForge FastAPI Backend Service
+  # ProspectForge FastAPI Backend Service on Render
   - type: web
-    name: prospectforge-api
+    name: prospectforge-backend
     runtime: python
     region: oregon
     plan: free
     branch: main
-    rootDir: api
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r api/requirements.txt
     startCommand: uvicorn api.app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: APP_ENV
         value: production
       - key: PORT
-        value: 8000
+        value: 10000
+      - key: PYTHONPATH
+        value: .
+      - key: DATABASE_URL
+        sync: false
       - key: CORS_ORIGINS
         value: "*"
       - key: NEATLOGS_API_KEY
         sync: false
+      - key: NEATLOGS_ENDPOINT
+        value: https://ingest.neatlogs.com
+      - key: NEATLOGS_WORKFLOW_NAME
+        value: prospectforge-b2b-agent
       - key: CRUSTDATA_API_KEY
         sync: false
       - key: AWS_ACCESS_KEY_ID
@@ -27,22 +34,9 @@ services:
         sync: false
       - key: AWS_REGION
         value: us-east-1
-
-  # ProspectForge Next.js Frontend Service
-  - type: web
-    name: prospectforge-web
-    runtime: node
-    region: oregon
-    plan: free
-    branch: main
-    rootDir: web
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: prospectforge-api
-          property: host
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SUPABASE_PROJECT_REF
+        value: jbfyxtbyheyuylptreud
+      - key: SUPABASE_URL
+        value: https://jbfyxtbyheyuylptreud.supabase.co

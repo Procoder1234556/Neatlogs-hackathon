@@ -184,6 +184,7 @@ class PublicSettingsResponse(BaseModel):
     target_gross_margin: float
     bedrock_model_fast: str
     bedrock_model_strong: str
+    max_poll_duration_seconds: int = 360  # communicated to frontend for poll budget
 
 class FilterSuggestionResponse(BaseModel):
     field: str

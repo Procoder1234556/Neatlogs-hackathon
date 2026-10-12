@@ -43,10 +43,12 @@ class ResearcherAgent:
             if len(valid_companies) < min(3, limit) and not fault_injected:
                 logger.info("Crustdata results sparse or directory-heavy. Invoking Firecrawl web intelligence fallback.")
                 span.set_attribute("fallback_triggered", "firecrawl")
-                fc_query = goal_text or filters.get("query") or "DevOps infrastructure startups hiring"
+                filters_query = filters.get("query", "") if isinstance(filters, dict) else ""
+                filters_niche = filters.get("niche", "DevOps & Cloud Infrastructure") if isinstance(filters, dict) else "DevOps & Cloud Infrastructure"
+                fc_query = goal_text or filters_query or "DevOps infrastructure startups hiring"
                 fc_companies, fc_latency, fc_hash = await firecrawl_client.search_companies(
                     query=fc_query,
-                    niche=niche or filters.get("niche", "DevOps & Cloud Infrastructure"),
+                    niche=niche or filters_niche,
                     limit=limit
                 )
                 if fc_companies:
