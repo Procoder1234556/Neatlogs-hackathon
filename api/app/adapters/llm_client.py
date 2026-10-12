@@ -9,42 +9,9 @@ logger = logging.getLogger("prospectforge.llm")
 
 class LLMClient:
     def __init__(self):
+        # User requirement: Only use Groq API key, disable AWS Bedrock
         self._bedrock = None
-        self._init_bedrock()
-
-    def _init_bedrock(self):
-        try:
-            import boto3
-            from botocore.config import Config
-            has_credentials = (
-                bool(settings.AWS_BEARER_TOKEN_BEDROCK or os.getenv("AWS_BEARER_TOKEN_BEDROCK")) or
-                bool((settings.AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")) and
-                     (settings.AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY"))) or
-                bool(os.getenv("AWS_PROFILE"))
-            )
-            if has_credentials:
-                boto_config = Config(connect_timeout=2, read_timeout=6, retries={"max_attempts": 1})
-                client_kwargs = {"region_name": settings.AWS_REGION, "config": boto_config}
-                ak = settings.AWS_ACCESS_KEY_ID or os.getenv("AWS_ACCESS_KEY_ID")
-                sk = settings.AWS_SECRET_ACCESS_KEY or os.getenv("AWS_SECRET_ACCESS_KEY")
-                st = settings.AWS_SESSION_TOKEN or os.getenv("AWS_SESSION_TOKEN")
-                if ak and sk:
-                    session = boto3.Session(
-                        aws_access_key_id=ak,
-                        aws_secret_access_key=sk,
-                        aws_session_token=st,
-                        region_name=settings.AWS_REGION
-                    )
-                    raw_client = session.client("bedrock-runtime", config=boto_config)
-                else:
-                    raw_client = boto3.client("bedrock-runtime", **client_kwargs)
-                self._bedrock = wrap_llm_client(raw_client)
-                logger.info("Bedrock client initialized with multi-model fallback and wrapped with neatlogs.")
-            else:
-                logger.info("Bedrock running in deterministic local fallback mode.")
-        except Exception as e:
-            logger.warning(f"Bedrock initialization fallback: {e}")
-            self._bedrock = None
+        logger.info("LLMClient initialized in Groq-exclusive mode.")
 
     async def generate_json(
         self,
@@ -53,64 +20,68 @@ class LLMClient:
         model_name: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Generates structured JSON output using multi-model cascade with neatlogs tracing.
-        Tries primary model, fallback models across Bedrock families, alternate providers,
-        and finally verified deterministic synthesis.
+        Generates structured JSON output exclusively via Groq API.
         """
-        chosen_model = model_name or settings.BEDROCK_MODEL_FAST
+        chosen_model = model_name or settings.GROQ_MODEL or "qwen/qwen3.8-27b"
 
-        # Multi-model fallback sequence
-        configured_fallbacks = [
-            f.strip() for f in (getattr(settings, "BEDROCK_FALLBACK_MODELS", None) or "").split(",") if f.strip()
-        ]
-        bedrock_candidates = [
-            chosen_model,
-            *configured_fallbacks,
-            # Modern Anthropic Claude family
-            "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
-            "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-            "us.anthropic.claude-3-5-haiku-20241022-v1:0",
-            "anthropic.claude-3-haiku-20240307-v1:0",
-            "anthropic.claude-3-sonnet-20240229-v1:0",
-            # Amazon Nova family
-            "amazon.nova-lite-v1:0",
-            "amazon.nova-micro-v1:0",
-            "amazon.nova-pro-v1:0",
-            "us.amazon.nova-lite-v1:0",
-            "us.amazon.nova-micro-v1:0",
-            "us.amazon.nova-pro-v1:0",
-            # Meta Llama 3.3 / 3.2 / 3.1
-            "meta.llama3-3-70b-instruct-v1:0",
-            "meta.llama3-1-8b-instruct-v1:0",
-            "meta.llama3-1-70b-instruct-v1:0",
-            "us.meta.llama3-2-3b-instruct-v1:0",
-            "meta.llama3-8b-instruct-v1:0",
-            # Mistral, Cohere & Titan
-            "mistral.mistral-7b-instruct-v0:2",
-            "mistral.mistral-large-2407-v1:0",
-            "cohere.command-r-v1:0",
-            "amazon.titan-text-express-v1"
-        ]
-        # Remove duplicates while preserving order
-        seen_models = set()
-        candidate_models = []
-        for m in bedrock_candidates:
-            if m and m not in seen_models:
-                seen_models.add(m)
-                candidate_models.append(m)
-
-        with trace_span("llm_call", kind="TOOL", attributes={"primary_model": chosen_model}) as span:
-            # 1. Try Alternate Providers (Groq, OpenAI, OpenRouter) first if configured
-            alt_keys = []
+        with trace_span("llm_call", kind="TOOL", attributes={"primary_model": chosen_model, "provider": "groq"}) as span:
             if settings.GROQ_API_KEY:
                 # Groq active models cascade
-                groq_models = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b"]
+                groq_models = [chosen_model, "qwen/qwen3.8-27b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+                seen_models = set()
+                candidate_models = []
                 for gm in groq_models:
-                    alt_keys.append(("groq", settings.GROQ_API_KEY, "https://api.groq.com/openai/v1", gm))
-            if settings.OPENAI_API_KEY:
-                alt_keys.append(("openai", settings.OPENAI_API_KEY, settings.OPENAI_BASE_URL, settings.OPENAI_MODEL))
-            if settings.OPENROUTER_API_KEY:
-                alt_keys.append(("openrouter", settings.OPENROUTER_API_KEY, "https://openrouter.ai/api/v1", "anthropic/claude-3.5-sonnet"))
+                    if gm and gm not in seen_models:
+                        seen_models.add(gm)
+                        candidate_models.append(gm)
+
+                import httpx
+                import asyncio
+                for prov_model in candidate_models:
+                    for retry_idx in range(2):
+                        try:
+                            async with httpx.AsyncClient(timeout=20.0) as client:
+                                resp = await client.post(
+                                    "https://api.groq.com/openai/v1/chat/completions",
+                                    headers={"Authorization": f"Bearer {settings.GROQ_API_KEY}", "Content-Type": "application/json"},
+                                    json={
+                                        "model": prov_model,
+                                        "messages": [
+                                            {"role": "system", "content": f"{system_prompt}\nReturn strictly valid JSON only."},
+                                            {"role": "user", "content": user_prompt}
+                                        ],
+                                        "response_format": {"type": "json_object"},
+                                        "temperature": 0.2
+                                    }
+                                )
+                                if resp.status_code == 200:
+                                    data = resp.json()
+                                    content = data["choices"][0]["message"]["content"]
+                                    usage = data.get("usage", {})
+                                    span.set_attribute("resolved_model", prov_model)
+                                    span.set_attribute("provider", "groq")
+                                    span.set_attribute("tokens_in", usage.get("prompt_tokens", 350))
+                                    span.set_attribute("tokens_out", usage.get("completion_tokens", 400))
+                                    clean_text = content.strip()
+                                    if clean_text.startswith("```json"):
+                                        clean_text = clean_text[7:]
+                                    elif clean_text.startswith("```"):
+                                        clean_text = clean_text[3:]
+                                    if clean_text.endswith("```"):
+                                        clean_text = clean_text[:-3]
+                                    parsed = json.loads(clean_text.strip())
+                                    if parsed:
+                                        return parsed
+                                elif resp.status_code == 429:
+                                    logger.warning(f"Groq rate limited on {prov_model}, backing off 1.5s...")
+                                    await asyncio.sleep(1.5)
+                                    continue
+                                else:
+                                    logger.warning(f"Groq error {resp.status_code} on {prov_model}: {resp.text[:200]}")
+                                    break
+                        except Exception as ex:
+                            logger.warning(f"Groq ({prov_model}) call error: {ex}")
+                            break
 
             import httpx
             import asyncio

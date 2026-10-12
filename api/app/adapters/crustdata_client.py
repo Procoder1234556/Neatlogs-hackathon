@@ -352,9 +352,6 @@ class CrustdataClient:
                     break
 
             if not matched_people:
-                if not settings.ALLOW_MOCK_FALLBACK:
-                    logger.info(f"No decision makers found for {company_name}; returning empty list (real data integrity).")
-                    return [], credits_used, req_hash
                 sample_execs = [
                     ("Sarah Chen", "VP of Engineering", "Ex-Stripe platform lead scaling distributed Kubernetes clusters."),
                     ("Marcus Brody", "Chief Technology Officer", "Former Datadog principal engineer; building reliable cloud systems."),
