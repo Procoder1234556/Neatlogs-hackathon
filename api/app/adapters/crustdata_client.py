@@ -106,6 +106,101 @@ MOCK_COMPANIES = [
                 "career_highlight": "Built automated vulnerability scanners at CrowdStrike."
             }
         ]
+    },
+    {
+        "id": "c-006",
+        "name": "ChainSafe Systems",
+        "domain": "chainsafe.io",
+        "headcount": {"total": 85, "growth_6m": 48},
+        "funding": {"stage": "Series A", "total_usd": 18750000, "last_round_date": "2025-10-12"},
+        "locations": {"country": "United States", "city": "San Francisco"},
+        "technographics": ["Solidity", "Rust", "Web3", "Ethereum", "Go", "Libp2p"],
+        "hiring_signals": ["Hiring Protocol Engineer", "Hiring Core Blockchain Developer"],
+        "decision_makers": [
+            {
+                "id": "p-106",
+                "name": "Aidan Hyman",
+                "title": "Chief Executive Officer & Co-founder",
+                "linkedin_url": "https://linkedin.com/in/aidan-hyman-chainsafe",
+                "career_highlight": "Co-founded ChainSafe; scaling multi-chain Web3 protocol infrastructure."
+            }
+        ]
+    },
+    {
+        "id": "c-007",
+        "name": "CertiK Security",
+        "domain": "certik.com",
+        "headcount": {"total": 120, "growth_6m": 35},
+        "funding": {"stage": "Series B", "total_usd": 88000000, "last_round_date": "2025-06-20"},
+        "locations": {"country": "United States", "city": "New York"},
+        "technographics": ["Smart Contracts", "Formal Verification", "Rust", "Python", "Web3"],
+        "hiring_signals": ["Hiring Smart Contract Security Auditor", "Hiring Security Engineer"],
+        "decision_makers": [
+            {
+                "id": "p-107",
+                "name": "Ronghui Gu",
+                "title": "Co-founder & Chief Scientist",
+                "linkedin_url": "https://linkedin.com/in/ronghui-gu-certik",
+                "career_highlight": "Columbia University Professor; pioneer in formal verification for blockchain protocols."
+            }
+        ]
+    },
+    {
+        "id": "c-008",
+        "name": "QuickNode Infrastructure",
+        "domain": "quicknode.com",
+        "headcount": {"total": 95, "growth_6m": 52},
+        "funding": {"stage": "Series B", "total_usd": 60000000, "last_round_date": "2025-04-15"},
+        "locations": {"country": "United States", "city": "Miami"},
+        "technographics": ["Web3 RPC", "Distributed Systems", "Kubernetes", "Golang", "Solana"],
+        "hiring_signals": ["Hiring Senior Web3 Infrastructure SRE", "Hiring Blockchain Solutions Architect"],
+        "decision_makers": [
+            {
+                "id": "p-108",
+                "name": "Alex Nabutovsky",
+                "title": "Co-founder & CEO",
+                "linkedin_url": "https://linkedin.com/in/alex-nabutovsky-quicknode",
+                "career_highlight": "Co-founded QuickNode; scaling globally distributed Web3 cloud infrastructure."
+            }
+        ]
+    },
+    {
+        "id": "c-009",
+        "name": "LayerZero Labs",
+        "domain": "layerzero.network",
+        "headcount": {"total": 65, "growth_6m": 60},
+        "funding": {"stage": "Series B", "total_usd": 120000000, "last_round_date": "2025-09-01"},
+        "locations": {"country": "United States", "city": "Vancouver"},
+        "technographics": ["Omnichain", "Smart Contracts", "C++", "Rust", "Cryptography"],
+        "hiring_signals": ["Hiring Protocol Systems Engineer", "Hiring Cryptography Researcher"],
+        "decision_makers": [
+            {
+                "id": "p-109",
+                "name": "Bryan Pellegrino",
+                "title": "Co-founder & CEO",
+                "linkedin_url": "https://linkedin.com/in/bryan-pellegrino-l0",
+                "career_highlight": "Created LayerZero omnichain messaging protocol; AI and distributed systems researcher."
+            }
+        ]
+    },
+    {
+        "id": "c-010",
+        "name": "Privy Security",
+        "domain": "privy.io",
+        "headcount": {"total": 38, "growth_6m": 65},
+        "funding": {"stage": "Series A", "total_usd": 18000000, "last_round_date": "2025-11-20"},
+        "locations": {"country": "United States", "city": "New York"},
+        "technographics": ["Web3 Auth", "Embedded Wallets", "TypeScript", "Cryptography", "Next.js"],
+        "hiring_signals": ["Hiring Senior Backend Engineer", "Hiring Staff Security Engineer"],
+        "decision_makers": [
+            {
+                "id": "p-110",
+                "name": "Henri Stern",
+                "title": "Co-founder & CEO",
+                "linkedin_url": "https://linkedin.com/in/henri-stern-privy",
+                "career_highlight": "Former Protocol Labs research lead; building user-centric authentication infrastructure."
+            }
+        ]
     }
 ]
 
@@ -203,15 +298,31 @@ class CrustdataClient:
                             raise RuntimeError("Crustdata insufficient credits (402)")
                         else:
                             logger.error(f"Crustdata error {resp.status_code}: {resp.text}")
+                    except RuntimeError:
+                        raise
                     except Exception as ex:
-                        logger.warning(f"Live Crustdata API call failed or timed out: {ex}. Falling back to deterministic fixtures.")
+                        if not settings.ALLOW_MOCK_FALLBACK:
+                            logger.error(f"Live Crustdata API call failed: {ex}. Mock fallbacks disabled in production.")
+                            raise RuntimeError(f"Crustdata service unavailable: {ex}")
+                        logger.warning(f"Live Crustdata API call failed or timed out: {ex}. Falling back to deterministic fixtures (development mode).")
 
-            # Fallback realistic fixtures (zero network lag, predictable rich data)
+            if not settings.ALLOW_MOCK_FALLBACK:
+                raise RuntimeError("Crustdata API key is not configured and mock fallback is disabled in this environment.")
+
+            # Fallback realistic fixtures (development or explicit test mode only)
             await asyncio.sleep(0.4)  # Simulate API latency
             credits_used = float(round(limit * 0.85, 2))
             span.set_attribute("credits_used", credits_used)
             span.set_attribute("mode", "fixture_fallback")
-            results = MOCK_COMPANIES[:limit]
+
+            # ponytail: filter mock companies matching domain/niche if present
+            kws = " ".join(filters.get("keywords") or []).lower() + " " + str(filters.get("niche", "")).lower() + " " + str(filters.get("query", "")).lower()
+            if any(w in kws for w in ["blockchain", "blcokchain", "crypto", "web3", "defi", "solidity"]):
+                matched = [c for c in MOCK_COMPANIES if any(t.lower() in ["solidity", "rust", "web3", "smart contracts", "libp2p", "omnichain", "cryptography", "web3 rpc", "web3 auth"] for t in c.get("technographics", []))]
+                results = (matched if matched else MOCK_COMPANIES)[:limit]
+            else:
+                results = MOCK_COMPANIES[:limit]
+
             self._cache[req_hash] = {"results": results, "credits": credits_used}
             return results, credits_used, req_hash
 
@@ -241,6 +352,9 @@ class CrustdataClient:
                     break
 
             if not matched_people:
+                if not settings.ALLOW_MOCK_FALLBACK:
+                    logger.info(f"No decision makers found for {company_name}; returning empty list (real data integrity).")
+                    return [], credits_used, req_hash
                 sample_execs = [
                     ("Sarah Chen", "VP of Engineering", "Ex-Stripe platform lead scaling distributed Kubernetes clusters."),
                     ("Marcus Brody", "Chief Technology Officer", "Former Datadog principal engineer; building reliable cloud systems."),

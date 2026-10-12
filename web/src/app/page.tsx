@@ -67,6 +67,8 @@ import {
   fetchRunTools,
   subscribeToRunEvents,
   createRun,
+  checkBackendHealth,
+  BackendHealthStatus,
   SourceHealthItem,
   RunDetail,
   PublicSettingsResponse,
@@ -233,8 +235,12 @@ export default function Dashboard() {
     total_cost_usd: 4.5
   });
   const [pricingData, setPricingData] = useState<PricingResponse | null>(null);
+  const [executionError, setExecutionError] = useState<string | null>(null);
   const [sourcesHealth, setSourcesHealth] = useState<SourceHealthItem[]>([]);
   const [publicSettings, setPublicSettings] = useState<PublicSettingsResponse | null>(null);
+  const [backendHealth, setBackendHealth] = useState<BackendHealthStatus>("healthy");
+  const [backendLatencyMs, setBackendLatencyMs] = useState<number | null>(null);
+  const [backendDetail, setBackendDetail] = useState<string>("");
   interface ChartPoint {
     time: string;
     credits: number;
@@ -360,6 +366,13 @@ export default function Dashboard() {
   const refreshAll = async () => {
     setIsRefreshing(true);
     try {
+      // 1. Genuine health & cold-start check against Render /health endpoint
+      const healthCheck = await checkBackendHealth(10000);
+      setBackendHealth(healthCheck.status);
+      setBackendLatencyMs(healthCheck.latencyMs ?? null);
+      setBackendDetail(healthCheck.detail ?? "");
+
+      // 2. Fetch live data across endpoints
       const [sources, summary, settings, pricing, runsList] = await Promise.all([
         fetchSourcesHealth(),
         fetchRunsSummary(),
@@ -377,7 +390,7 @@ export default function Dashboard() {
         setActiveRunId(targetId);
       }
     } catch (err) {
-      console.warn("Live API sync fallback:", err);
+      console.warn("Live API sync notice:", err);
     } finally {
       setIsRefreshing(false);
     }
@@ -607,6 +620,7 @@ export default function Dashboard() {
 
     setViewState("running");
     setIsProcessing(true);
+    setExecutionError(null);
     setProcessingElapsedMs(0);
     setLifecycleState("thinking");
     setActiveAgentName("Planner Agent");
@@ -633,13 +647,40 @@ export default function Dashboard() {
 
     // Real backend invocation with real-time SSE event synchronization
     try {
+      // ponytail: infer niche dynamically from prompt if user typed custom keywords
+      const promptLower = goalText.toLowerCase();
+      let effectiveNiche = niche;
+      if (promptLower.includes("blockchain") || promptLower.includes("blcokchain") || promptLower.includes("crypto") || promptLower.includes("web3") || promptLower.includes("defi")) {
+        effectiveNiche = "Web3 & Blockchain";
+      } else if (promptLower.includes("security") || promptLower.includes("cyber") || promptLower.includes("devsecops")) {
+        effectiveNiche = "Cybersecurity";
+      } else if (promptLower.includes("ai") || promptLower.includes("machine learning") || promptLower.includes("llm")) {
+        effectiveNiche = "Artificial Intelligence";
+      } else if (promptLower.includes("health") || promptLower.includes("bio") || promptLower.includes("medtech")) {
+        effectiveNiche = "Healthcare & Biotech";
+      }
+      if (backendHealth === "cold_starting") {
+        setLiveActivityLogs((prev) => [
+          ...prev,
+          {
+            id: `log-cold-${Date.now()}`,
+            timestamp: new Date().toLocaleTimeString(),
+            agent: "Infrastructure",
+            level: "warning",
+            message: "Render instance is spinning up from sleep (cold start in progress, ~30-50s)..."
+          }
+        ]);
+      }
+
       const newRun = await createRun({
-        niche,
+        niche: effectiveNiche,
         goal_text: goalText,
-        lead_target: leadTarget,
+        lead_target: Math.max(5, leadTarget),
         credit_budget: creditBudget,
         target_titles: ["VP of Engineering", "Head of Platform", "CTO"]
       });
+
+      setBackendHealth("healthy");
 
       if (newRun && newRun.id) {
         setActiveRunId(newRun.id);
@@ -799,16 +840,55 @@ export default function Dashboard() {
                 clearInterval(pollIntervalRef.current);
                 pollIntervalRef.current = null;
               }
+              if (processingTimerRef.current) {
+                clearInterval(processingTimerRef.current);
+                processingTimerRef.current = null;
+              }
+              const failureMsg = (detail as any).error || "Run failed: candidate pipeline could not be recovered or service limit reached.";
               setLifecycleState("failed");
               setIsProcessing(false);
+              setActiveAgentName("Recovery Engine");
+              setActiveAgentDetail(failureMsg);
+              setExecutionError(failureMsg);
+              try {
+                const leadsData = await fetchRunLeads(newRun.id);
+                if (leadsData && leadsData.length > 0) {
+                  setLeads(leadsData.map(mapApiLeadToUI));
+                  setViewState("results");
+                  setVisibleLeadCount(leadsData.length);
+                } else {
+                  // Truthful state: No fabricated leads displayed on failure
+                  setLeads([]);
+                  setVisibleLeadCount(0);
+                }
+              } catch (_) {
+                setLeads([]);
+                setVisibleLeadCount(0);
+              }
             }
           } catch (e) {
             console.error("Run polling error:", e);
           }
         }, 800);
       }
-    } catch (err) {
-      console.error("Backend launch deferred, demo interactive flow continues:", err);
+    } catch (err: any) {
+      console.error("Backend launch error:", err);
+      setIsProcessing(false);
+      setLifecycleState("failed");
+      const errText = err?.message || "Backend service unavailable. Please check connection and retry.";
+      setExecutionError(errText);
+      setActiveAgentName("Orchestrator");
+      setActiveAgentDetail(errText);
+      setLiveActivityLogs((prev) => [
+        ...prev,
+        {
+          id: `log-err-${Date.now()}`,
+          timestamp: new Date().toLocaleTimeString(),
+          agent: "Orchestrator",
+          level: "error",
+          message: `Launch error: ${errText}`
+        }
+      ]);
     }
   };
 
@@ -1095,6 +1175,35 @@ export default function Dashboard() {
 
           {/* Right Status Actions */}
           <div className="flex items-center gap-2.5 text-xs">
+            {/* Live Backend Connection Status Indicator */}
+            <div
+              className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-default ${
+                backendHealth === "healthy"
+                  ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/40"
+                  : backendHealth === "cold_starting"
+                  ? "bg-amber-950/40 text-amber-300 border-amber-700/50 animate-pulse"
+                  : "bg-red-950/40 text-red-400 border-red-800/40"
+              }`}
+              title={backendDetail || `Render status: ${backendHealth}`}
+            >
+              <span
+                className={`size-1.5 rounded-full ${
+                  backendHealth === "healthy"
+                    ? "bg-emerald-400 animate-pulse"
+                    : backendHealth === "cold_starting"
+                    ? "bg-amber-400 animate-ping"
+                    : "bg-red-500"
+                }`}
+              />
+              <span>
+                {backendHealth === "healthy"
+                  ? `Render: ${backendLatencyMs ? `${backendLatencyMs}ms` : "Live"}`
+                  : backendHealth === "cold_starting"
+                  ? "Render: Waking..."
+                  : "Render: Offline"}
+              </span>
+            </div>
+
             {/* Live Agent Lifecycle Beacon */}
             <AgentStatusBeacon compact state={lifecycleState} activeAgentName={activeAgentName} />
 
@@ -1144,6 +1253,29 @@ export default function Dashboard() {
                 <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white mb-6">
                   What&apos;s on the agenda today?
                 </h1>
+
+                {/* Execution Error Banner (Truthful system state, no fabricated fallback) */}
+                {executionError && (
+                  <div className="w-full mb-4 p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800/60 text-rose-200 text-xs text-left flex items-start justify-between gap-3 shadow-lg">
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="size-4 text-rose-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold text-rose-300">Operation Status: </span>
+                        <span>{executionError}</span>
+                        <p className="text-[11px] text-rose-400/80 mt-1">
+                          No mock or fabricated leads returned. User prompt and parameters have been preserved. You can edit criteria and retry.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setExecutionError(null)}
+                      className="text-rose-400 hover:text-white text-xs px-2 py-0.5 rounded-md hover:bg-rose-900/50 cursor-pointer"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                )}
 
                 {/* Main Interactive ChatGPT-style Input Bar */}
                 <div className="w-full bg-[#2F2F2F] border border-[#424242] focus-within:border-[#606060] rounded-[24px] shadow-lg shadow-black/20 p-2.5 transition-all">
@@ -1875,10 +2007,16 @@ export default function Dashboard() {
               <div className="p-3 rounded-xl bg-[#262626] border border-[#333333]">
                 <div className="flex justify-between font-bold text-sm text-white mb-1">
                   <span>Price per Lead</span>
-                  <span className="text-emerald-400">$1.15</span>
+                  <span className="text-emerald-400">
+                    {pricingData ? `$${pricingData.computed_price_per_lead.toFixed(2)}` : "$1.15"}
+                  </span>
                 </div>
                 <p className="text-[#A0A0A0] text-[11px]">
-                  Formula: Measured median cost ($0.28) / (1 - 0.75 target margin) = $1.15.
+                  {pricingData ? (
+                    `Formula: Measured median cost ($${pricingData.measured_median_cost_per_lead.toFixed(2)}) / (1 - ${(pricingData.target_gross_margin * 100).toFixed(0)}% target margin) = $${pricingData.computed_price_per_lead.toFixed(2)}.`
+                  ) : (
+                    "Formula: Measured median cost ($0.28) / (1 - 0.75 target margin) = $1.15."
+                  )}
                 </p>
               </div>
 

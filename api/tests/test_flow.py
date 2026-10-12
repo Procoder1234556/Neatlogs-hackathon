@@ -45,6 +45,19 @@ def test_system_endpoints():
     from fastapi.testclient import TestClient
     from api.app.main import app
     with TestClient(app) as client:
+        # 0. Liveness & Readiness checks
+        r_health = client.get("/health")
+        assert r_health.status_code == 200
+        assert r_health.json()["status"] == "healthy"
+
+        r_health_api = client.get("/api/v1/health")
+        assert r_health_api.status_code == 200
+        assert r_health_api.json()["status"] == "healthy"
+
+        r_ready = client.get("/readyz")
+        assert r_ready.status_code == 200
+        assert r_ready.json()["status"] == "ready"
+
         # 1. Sources health
         r_sources = client.get("/api/v1/sources/health")
         assert r_sources.status_code == 200
@@ -133,6 +146,61 @@ async def test_langgraph_workflow():
     assert result["status"] in ["verified", "complete"]
     assert len(result["messages"]) >= 2
     assert result["credits_used"] > 0
+
+def test_healthz_and_readyz():
+    from fastapi.testclient import TestClient
+    from api.app.main import app
+    with TestClient(app) as client:
+        # Liveness check
+        r_live = client.get("/healthz")
+        assert r_live.status_code == 200
+        assert r_live.json()["status"] == "healthy"
+
+        # Readiness check
+        r_ready = client.get("/readyz")
+        assert r_ready.status_code == 200
+        data = r_ready.json()
+        assert data["status"] == "ready"
+        assert data["database"] == "connected"
+
+@pytest.mark.asyncio
+async def test_mock_fallback_gate_enforcement():
+    from api.app.config import settings
+    from api.app.adapters.crustdata_client import CrustdataClient
+    from api.app.adapters.llm_client import LLMClient
+
+    # Test with mock fallback disabled (production simulation)
+    orig_mock = settings.ALLOW_MOCK_FALLBACK
+    orig_key = settings.CRUSTDATA_API_KEY
+    orig_groq = settings.GROQ_API_KEY
+    orig_openai = settings.OPENAI_API_KEY
+    orig_openrouter = settings.OPENROUTER_API_KEY
+    try:
+        settings.ALLOW_MOCK_FALLBACK = False
+        settings.CRUSTDATA_API_KEY = "invalid-or-missing"
+        settings.GROQ_API_KEY = None
+        settings.OPENAI_API_KEY = None
+        settings.OPENROUTER_API_KEY = None
+
+        c_client = CrustdataClient()
+        c_client.api_key = None
+
+        with pytest.raises(RuntimeError) as exc_info:
+            await c_client.company_search({"query": "devops"}, limit=5)
+        assert "mock fallback is disabled" in str(exc_info.value) or "unavailable" in str(exc_info.value)
+
+        # Verify LLM client raises instead of returning fabricated output
+        l_client = LLMClient()
+        l_client._bedrock = None
+        with pytest.raises(RuntimeError) as exc_llm:
+            await l_client.generate_json("PLANNER", "find startups")
+        assert "Refusing fabricated agent synthesis" in str(exc_llm.value) or "unavailable" in str(exc_llm.value)
+    finally:
+        settings.ALLOW_MOCK_FALLBACK = orig_mock
+        settings.CRUSTDATA_API_KEY = orig_key
+        settings.GROQ_API_KEY = orig_groq
+        settings.OPENAI_API_KEY = orig_openai
+        settings.OPENROUTER_API_KEY = orig_openrouter
 
 
 

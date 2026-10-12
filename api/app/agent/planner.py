@@ -30,6 +30,25 @@ class PlannerAgent:
                 f"Region: {region}"
             )
             plan = await llm_client.generate_json(system_prompt, user_prompt)
+            # Ensure primary_filters reflect user goal_text
+            # ponytail: extract keywords directly if missing from generated plan
+            raw_filters = plan.get("primary_filters")
+            if not isinstance(raw_filters, dict):
+                primary_filters = {}
+                plan["primary_filters"] = primary_filters
+            else:
+                primary_filters = raw_filters
+
+            if not primary_filters.get("keywords") and not primary_filters.get("query"):
+                goal_lower = (goal_text + " " + niche).lower()
+                if any(w in goal_lower for w in ["blockchain", "blcokchain", "crypto", "web3", "defi"]):
+                    primary_filters["keywords"] = ["Blockchain", "Web3", "Crypto"]
+                elif any(w in goal_lower for w in ["ai", "machine learning", "llm"]):
+                    primary_filters["keywords"] = ["Artificial Intelligence", "LLM", "Machine Learning"]
+                elif any(w in goal_lower for w in ["security", "cyber", "devsecops"]):
+                    primary_filters["keywords"] = ["Cybersecurity", "Cloud Security"]
+                else:
+                    primary_filters["keywords"] = [k for k in niche.split() if len(k) > 3][:3]
             span.set_attribute("strategy", plan.get("strategy", "Multi-pass search"))
             return plan
 

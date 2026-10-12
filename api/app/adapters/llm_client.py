@@ -191,25 +191,45 @@ class LLMClient:
                             span.set_attribute("bedrock_auth_status", "disabled")
                             break
 
-            # 3. Dynamic context-grounded fallback
+            # 3. Dynamic context-grounded fallback (or error in strict mode)
+            if not settings.ALLOW_MOCK_FALLBACK:
+                logger.error("All live LLM cascades failed and ALLOW_MOCK_FALLBACK is False. Refusing fabricated agent synthesis.")
+                raise RuntimeError("All LLM providers (Bedrock, Groq, OpenAI, OpenRouter) unavailable or unconfigured.")
+
             span.set_attribute("mode", "deterministic_fallback")
             span.set_attribute("tokens_in", 350)
             span.set_attribute("tokens_out", 450)
 
             # Route by system prompt content
             if "PLANNER" in system_prompt:
+                # ponytail: dynamic domain keywords from user prompt without external dependencies
+                prompt_lower = user_prompt.lower()
+                if any(w in prompt_lower for w in ["blockchain", "blcokchain", "crypto", "web3", "defi"]):
+                    extracted_kw = ["Blockchain", "Web3", "Crypto", "Smart Contracts"]
+                    strategy_desc = "Targeting early-stage Web3 and blockchain startups hiring technical talent."
+                elif any(w in prompt_lower for w in ["ai", "machine learning", "llm", "agent"]):
+                    extracted_kw = ["Artificial Intelligence", "LLM", "Machine Learning"]
+                    strategy_desc = "Targeting generative AI and machine learning infrastructure startups."
+                elif any(w in prompt_lower for w in ["security", "cyber", "devsecops"]):
+                    extracted_kw = ["Cybersecurity", "Cloud Security", "Identity"]
+                    strategy_desc = "Targeting early-stage security startups hiring platform and security engineers."
+                else:
+                    extracted_kw = ["Kubernetes", "DevOps", "Infrastructure"]
+                    strategy_desc = "Dual-pass discovery focusing on verified Seed-to-Series A startups hiring platform roles."
+
                 return {
-                    "strategy": "Dual-pass discovery focusing on verified Seed-to-Series A startups hiring platform roles.",
+                    "strategy": strategy_desc,
                     "primary_filters": {
                         "headcount_min": 10,
                         "headcount_max": 50,
                         "funding_stages": ["Seed", "Series A"],
-                        "keywords": ["Kubernetes", "DevOps", "Infrastructure"]
+                        "keywords": extracted_kw
                     },
                     "fallback_filters": {
                         "headcount_min": 10,
                         "headcount_max": 100,
-                        "funding_stages": ["Seed", "Series A", "Series B"]
+                        "funding_stages": ["Seed", "Series A", "Series B"],
+                        "keywords": extracted_kw
                     },
                     "enrichment_priorities": ["headcount_growth", "recent_funding", "hiring_signals"]
                 }

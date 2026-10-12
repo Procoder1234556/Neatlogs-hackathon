@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v1", tags=["system"])
 @router.get("/sources/health", response_model=SourcesHealthResponse)
 def get_sources_health():
     """Live health status across all integrated services (Crustdata, Bedrock, neatlogs, Supabase)."""
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     # 1. neatlogs Telemetry
     neatlogs_ok = bool(settings.NEATLOGS_API_KEY and settings.NEATLOGS_API_KEY != "demo-neatlogs-key")
@@ -84,7 +84,8 @@ def get_public_settings():
         target_gross_margin=0.75,
         bedrock_model_fast=settings.BEDROCK_MODEL_FAST,
         bedrock_model_strong=settings.BEDROCK_MODEL_STRONG,
-        max_poll_duration_seconds=settings.MAX_POLL_DURATION_SECONDS
+        max_poll_duration_seconds=settings.MAX_POLL_DURATION_SECONDS,
+        allow_mock_fallback=settings.ALLOW_MOCK_FALLBACK
     )
 
 @router.get("/filters/suggest", response_model=FilterSuggestionResponse)

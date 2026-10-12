@@ -22,7 +22,7 @@ class Run(Base):
     credit_budget = Column(Integer, nullable=False, default=300)
     status = Column(String(30), nullable=False, default="queued")  # queued, running, complete, partial, failed
     plan = Column(JSON, nullable=True)
-    owner_id = Column(String(36), nullable=False, index=True)
+    owner_id = Column(String(36), nullable=False, default=generate_uuid, index=True)
     share_token_hash = Column(String(64), nullable=True)
     share_expires_at = Column(DateTime, nullable=True)
     neatlogs_trace_id = Column(String(120), nullable=True)

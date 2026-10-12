@@ -21,14 +21,8 @@ def init_tracing() -> bool:
         import neatlogs
         api_key = settings.NEATLOGS_API_KEY or os.getenv("NEATLOGS_API_KEY")
         if api_key and api_key != "demo-neatlogs-key":
-            init_kwargs = {
-                "api_key": api_key,
-                "workflow_name": settings.NEATLOGS_WORKFLOW_NAME,
-            }
-            endpoint = settings.NEATLOGS_ENDPOINT or os.getenv("NEATLOGS_ENDPOINT")
-            if endpoint:
-                init_kwargs["endpoint"] = endpoint
-            neatlogs.init(**init_kwargs)
+            tags = [settings.NEATLOGS_WORKFLOW_NAME] if settings.NEATLOGS_WORKFLOW_NAME else None
+            neatlogs.init(api_key=api_key, tags=tags)
             _neatlogs_initialized = True
             logger.info("neatlogs telemetry initialized successfully.")
             return True

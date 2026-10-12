@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     MAX_CREDITS_PER_RUN: int = 500
     DAILY_CREDIT_CAP: int = 5000
     INJECT_FAULT: Optional[str] = None  # empty_search | rate_limit | bad_fact
+    # Real-data integrity gate: Disallows mock/fixture fallbacks in production unless explicitly enabled
+    ALLOW_MOCK_FALLBACK: bool = Field(default_factory=lambda: os.getenv("ALLOW_MOCK_FALLBACK", "true" if os.getenv("APP_ENV", "development") != "production" else "false").lower() in ("true", "1", "yes"))
 
     # Supabase & MCP Integration
     SUPABASE_PROJECT_REF: str = "jbfyxtbyheyuylptreud"

@@ -1,0 +1,31 @@
+name: Render Backend Health Monitor
+
+on:
+  schedule:
+    # Run every 14 minutes to evaluate uptime (can be paused to conserve 750 free-tier monthly hours)
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+    inputs:
+      service_url:
+        description: "Backend URL to probe"
+        required: false
+        default: "https://prospectforge-backend.onrender.com"
+
+jobs:
+  health-check:
+    name: Probe Render Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Execute Health & Cold Start Probe
+        env:
+          SERVICE_URL: ${{ github.event.inputs.service_url || 'https://prospectforge-backend.onrender.com' }}
+        run: |
+          python scripts/ping_health.py --url "$SERVICE_URL" --attempts 4 --timeout 30
