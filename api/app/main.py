@@ -187,6 +187,8 @@ app.include_router(pricing.router)
 app.include_router(system.router)
 
 @app.get("/health")
+@app.get("/healthz")
+@app.get("/api/v1/health")
 def health_check():
     return {
         "status": "healthy",
@@ -194,6 +196,33 @@ def health_check():
         "version": "1.0.0",
         "environment": settings.APP_ENV
     }
+
+@app.get("/readyz")
+@app.get("/health/ready")
+@app.get("/api/v1/health/ready")
+def readiness_check():
+    """Kubernetes/Container readiness probe verifying database connectivity."""
+    db_ok = True
+    db_error = None
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)
+
+    status_code = 200 if db_ok else 503
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "status": "ready" if db_ok else "unready",
+            "database": "connected" if db_ok else "failed",
+            "error": db_error,
+            "mock_fallback_allowed": settings.ALLOW_MOCK_FALLBACK,
+            "environment": settings.APP_ENV
+        }
+    )
 
 @app.get("/api/supabase/check")
 def supabase_mcp_check():

@@ -185,6 +185,7 @@ class PublicSettingsResponse(BaseModel):
     bedrock_model_fast: str
     bedrock_model_strong: str
     max_poll_duration_seconds: int = 360  # communicated to frontend for poll budget
+    allow_mock_fallback: bool = False
 
 class FilterSuggestionResponse(BaseModel):
     field: str

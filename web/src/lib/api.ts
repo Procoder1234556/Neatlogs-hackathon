@@ -1,12 +1,13 @@
 // ---------------------------------------------------------------------------
-// Retry policy — all values read from environment at module load.
+// Retry & cold-start policy — all values read from environment at module load.
 // Set NEXT_PUBLIC_RETRY_* to override per environment.
-// ponytail: no retry library; fetch + setTimeout is sufficient here.
+// ponytail: bounded exponential backoff with full jitter, no external deps.
 // ---------------------------------------------------------------------------
-const RETRY_MAX_ATTEMPTS = parseInt(process.env.NEXT_PUBLIC_RETRY_MAX_ATTEMPTS ?? "3", 10);
-const RETRY_BASE_DELAY_MS = parseInt(process.env.NEXT_PUBLIC_RETRY_BASE_DELAY_MS ?? "500", 10);
-const RETRY_MAX_DELAY_MS = parseInt(process.env.NEXT_PUBLIC_RETRY_MAX_DELAY_MS ?? "8000", 10);
-const REQUEST_TIMEOUT_MS = parseInt(process.env.NEXT_PUBLIC_REQUEST_TIMEOUT_MS ?? "15000", 10);
+const RETRY_MAX_ATTEMPTS = parseInt(process.env.NEXT_PUBLIC_RETRY_MAX_ATTEMPTS ?? "4", 10);
+const RETRY_BASE_DELAY_MS = parseInt(process.env.NEXT_PUBLIC_RETRY_BASE_DELAY_MS ?? "1000", 10);
+const RETRY_MAX_DELAY_MS = parseInt(process.env.NEXT_PUBLIC_RETRY_MAX_DELAY_MS ?? "12000", 10);
+const REQUEST_TIMEOUT_MS = parseInt(process.env.NEXT_PUBLIC_REQUEST_TIMEOUT_MS ?? "45000", 10);
+const COLD_START_TIMEOUT_MS = parseInt(process.env.NEXT_PUBLIC_COLD_START_TIMEOUT_MS ?? "60000", 10);
 
 /** HTTP status codes safe to retry — excludes auth, validation, and not-found. */
 const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
@@ -217,6 +218,7 @@ export interface PublicSettingsResponse {
   bedrock_model_fast: string;
   bedrock_model_strong: string;
   max_poll_duration_seconds: number;
+  allow_mock_fallback?: boolean;
 }
 
 export interface SeriesPoint {
@@ -264,9 +266,82 @@ export interface ToolCallApiItem {
 // ---------------------------------------------------------------------------
 // API base URL — configurable per environment; never hardcode production host.
 // ---------------------------------------------------------------------------
-export const API_BASE =
+export const API_BASE = (
   process.env.NEXT_PUBLIC_API_URL ||
-  "https://neatlogs-hackathon.p03490978.workers.dev/api/v1";
+  (typeof window !== "undefined" && window.location.hostname === "localhost"
+    ? "http://localhost:8000/api/v1"
+    : "https://prospectforge-backend.onrender.com/api/v1")
+).replace(/\/+$/, "");
+
+export type BackendHealthStatus = "healthy" | "cold_starting" | "offline";
+
+export interface BackendHealthCheckResult {
+  status: BackendHealthStatus;
+  latencyMs?: number;
+  environment?: string;
+  detail?: string;
+}
+
+/**
+ * Lightweight health check against FastAPI /health probe.
+ * Detects whether Render free-tier container is active, waking, or down.
+ */
+export async function checkBackendHealth(
+  timeoutMs: number = 8000
+): Promise<BackendHealthCheckResult> {
+  const rootHealthUrl = API_BASE.replace(/\/api\/v1\/?$/, "") + "/health";
+  const start = typeof performance !== "undefined" ? performance.now() : Date.now();
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(rootHealthUrl, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+    const latencyMs = Math.round(
+      (typeof performance !== "undefined" ? performance.now() : Date.now()) - start
+    );
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return {
+        status: "healthy",
+        latencyMs,
+        environment: data.environment || "production",
+        detail: "Backend live and responding",
+      };
+    }
+
+    if (res.status === 502 || res.status === 503 || res.status === 504) {
+      return {
+        status: "cold_starting",
+        latencyMs,
+        detail: `Render container spinning up (HTTP ${res.status}).`,
+      };
+    }
+
+    return {
+      status: "offline",
+      latencyMs,
+      detail: `Backend returned HTTP ${res.status}.`,
+    };
+  } catch (err: unknown) {
+    clearTimeout(id);
+    const isAbort = err instanceof Error && err.name === "AbortError";
+    if (isAbort) {
+      return {
+        status: "cold_starting",
+        detail: "Request timed out; Render container waking from free-tier sleep (typically 30-50s).",
+      };
+    }
+    return {
+      status: "offline",
+      detail: err instanceof Error ? err.message : "Network error connecting to backend",
+    };
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Read-only fetch helpers (with retry)
@@ -279,15 +354,9 @@ export async function fetchRunsSummary() {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch {
-    return {
-      total_runs: 1,
-      total_leads_delivered: 15,
-      total_claims_verified: 28,
-      avg_fit_score: 92,
-      total_credits_used: 135.0,
-      total_cost_usd: 4.5,
-    };
+  } catch (err) {
+    // Return null on failure — let UI truthful indicator show unavailability
+    return null;
   }
 }
 
@@ -333,8 +402,6 @@ export async function estimateRun(payload: unknown): Promise<RunEstimate> {
  * duplicate runs on the backend.
  */
 export async function createRun(payload: unknown) {
-  // Simple fingerprint: JSON of payload. Backend can use X-Idempotency-Key
-  // to deduplicate if it chooses to; the key prevents accidental double-submit.
   const idempotencyKey = btoa(
     encodeURIComponent(JSON.stringify(payload))
   ).slice(0, 40);
@@ -349,7 +416,7 @@ export async function createRun(payload: unknown) {
       },
       body: JSON.stringify(payload),
     },
-    2 // Only 2 attempts for mutations; backend has its own dedup guard
+    3 // 3 bounded attempts for run creation
   );
   if (!res.ok) {
     const body = await res.text().catch(() => "");
@@ -358,7 +425,7 @@ export async function createRun(payload: unknown) {
   return await res.json();
 }
 
-export async function fetchPricing(): Promise<PricingResponse> {
+export async function fetchPricing(): Promise<PricingResponse | null> {
   try {
     const res = await fetchWithRetry(`${API_BASE}/pricing`, {
       cache: "no-store",
@@ -366,39 +433,8 @@ export async function fetchPricing(): Promise<PricingResponse> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch {
-    return {
-      measured_median_cost_per_lead: 0.28,
-      target_gross_margin: 0.75,
-      computed_price_per_lead: 1.15,
-      tiers: [
-        {
-          plan: "Starter Batch",
-          price_headline: "$25 / run",
-          price_per_lead: 1.65,
-          target_margin: "75%",
-          features: [
-            "15 verified leads",
-            "Anti-hallucination audit",
-            "neatlogs trace export",
-          ],
-        },
-        {
-          plan: "Growth Engine",
-          price_headline: "$89 / mo",
-          price_per_lead: 1.15,
-          target_margin: "78%",
-          features: [
-            "75 verified leads",
-            "Full filter widening ladder",
-            "Crustdata multi-source facts",
-          ],
-        },
-      ],
-      cfo_assumptions: {
-        crustdata_credit_price_usd: 0.01,
-        bedrock_token_price_per_1k: 0.003,
-      },
-    };
+    // Return null — caller handles truthful empty or pending state without fabrication
+    return null;
   }
 }
 
@@ -410,31 +446,32 @@ export async function fetchSourcesHealth(): Promise<SourceHealthItem[]> {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data: SourcesHealthResponse = await res.json();
     return data.sources;
-  } catch {
+  } catch (err) {
+    // Truthful system state: Do not fabricate "connected/operational" when backend unreachable
     return [
       {
         source: "neatlogs",
-        status: "connected",
-        detail: "Active OpenTelemetry pipeline",
+        status: "disconnected",
+        detail: `Backend unreachable at ${API_BASE}. Reconnection attempts bounded.`,
         checked_at: new Date().toISOString(),
       },
       {
         source: "Crustdata",
-        status: "operational",
-        detail: "Live B2B discovery & graph",
+        status: "offline",
+        detail: "Live API gateway unreachable.",
         checked_at: new Date().toISOString(),
-        balance: 5000,
+        balance: null,
       },
       {
         source: "AWS Bedrock",
-        status: "ready",
-        detail: "Claude 3.5 & Nova multi-model cascade",
+        status: "unavailable",
+        detail: "Pending backend availability.",
         checked_at: new Date().toISOString(),
       },
       {
         source: "Supabase",
-        status: "linked",
-        detail: "Project jbfyxtbyheyuylptreud linked",
+        status: "unreachable",
+        detail: "Database link status unconfirmed while backend offline.",
         checked_at: new Date().toISOString(),
       },
     ];
@@ -449,16 +486,7 @@ export async function fetchPublicSettings(): Promise<PublicSettingsResponse | nu
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch {
-    return {
-      app_env: "development",
-      version: "1.0.0",
-      daily_credit_cap: 1000,
-      max_credits_per_run: 250,
-      target_gross_margin: 0.75,
-      bedrock_model_fast: "anthropic.claude-3-5-haiku-20241022-v1:0",
-      bedrock_model_strong: "anthropic.claude-3-5-sonnet-20241022-v2:0",
-      max_poll_duration_seconds: 360,
-    };
+    return null;
   }
 }
 
@@ -469,57 +497,9 @@ export async function fetchRunSeries(runId: string): Promise<SeriesPoint[]> {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch {
-    return [
-      {
-        timestamp: "0:05",
-        step_name: "Plan",
-        credits: 0.0,
-        tokens: 450,
-        cost_usd: 0.02,
-        recovery_marker: null,
-      },
-      {
-        timestamp: "0:40",
-        step_name: "Search",
-        credits: 45.0,
-        tokens: 1200,
-        cost_usd: 0.48,
-        recovery_marker: "Filter Widening (10..100)",
-      },
-      {
-        timestamp: "1:20",
-        step_name: "Enrich",
-        credits: 95.0,
-        tokens: 8500,
-        cost_usd: 1.15,
-        recovery_marker: null,
-      },
-      {
-        timestamp: "2:00",
-        step_name: "Score",
-        credits: 95.0,
-        tokens: 16000,
-        cost_usd: 2.1,
-        recovery_marker: null,
-      },
-      {
-        timestamp: "2:30",
-        step_name: "Write",
-        credits: 115.0,
-        tokens: 28000,
-        cost_usd: 3.4,
-        recovery_marker: null,
-      },
-      {
-        timestamp: "2:45",
-        step_name: "Verify",
-        credits: 135.0,
-        tokens: 32000,
-        cost_usd: 4.25,
-        recovery_marker: null,
-      },
-    ];
+  } catch (err) {
+    // Return empty array on failure — never fabricate fake telemetry spend curves
+    return [];
   }
 }
 
@@ -532,28 +512,9 @@ export async function fetchRunSignals(
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch {
-    return [
-      { name: "DevOps / SRE Hiring", score: 95, delta: 12, direction: "up" },
-      {
-        name: "Headcount Velocity (>30%)",
-        score: 92,
-        delta: 8,
-        direction: "up",
-      },
-      {
-        name: "Kubernetes / Cloud Stack",
-        score: 90,
-        delta: 4,
-        direction: "up",
-      },
-      {
-        name: "Seed / Series A Stage",
-        score: 88,
-        delta: 5,
-        direction: "up",
-      },
-    ];
+  } catch (err) {
+    // Return empty array on failure — truthful state representation
+    return [];
   }
 }
 

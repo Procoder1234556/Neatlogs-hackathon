@@ -431,14 +431,40 @@ export default {
       });
     }
 
+    // Upstream Backend Proxy: If BACKEND_UPSTREAM_URL is set, forward /api and /health requests
+    // to genuine FastAPI backend service on Render/ECS while adding tracing headers
+    if (env.BACKEND_UPSTREAM_URL && (path.startsWith("/api") || path.startsWith("/health") || path.startsWith("/readyz"))) {
+      try {
+        const upstreamUrl = new URL(path + url.search, env.BACKEND_UPSTREAM_URL);
+        const upstreamRequest = new Request(upstreamUrl.toString(), {
+          method: request.method,
+          headers: request.headers,
+          body: ["GET", "HEAD"].includes(request.method) ? undefined : request.body,
+          redirect: "follow"
+        });
+        const upstreamResponse = await fetch(upstreamRequest);
+        const responseHeaders = new Headers(upstreamResponse.headers);
+        Object.entries(corsHeaders).forEach(([k, v]) => responseHeaders.set(k, v));
+        responseHeaders.set("X-Upstream-Proxy", "cloudflare-edge");
+        return new Response(upstreamResponse.body, {
+          status: upstreamResponse.status,
+          statusText: upstreamResponse.statusText,
+          headers: responseHeaders
+        });
+      } catch (proxyErr) {
+        console.warn("Upstream proxy failed, falling back to edge worker handler:", proxyErr);
+      }
+    }
+
     // 1. Health check
-    if (path === "/health" || path === "/healthz") {
+    if (path === "/health" || path === "/healthz" || path === "/readyz") {
       return jsonResponse({
         status: "healthy",
         service: "prospectforge-api",
         provider: "cloudflare-workers",
         region: request.cf?.colo || "global",
         kv_bound: !!env.PROSPECTFORGE_KV,
+        upstream_configured: !!env.BACKEND_UPSTREAM_URL,
         env: env.APP_ENV || "production",
         timestamp: new Date().toISOString()
       });

@@ -8,6 +8,9 @@ if db_url.startswith("postgres://"):
 
 # SQLite connection args for multithreaded fastapi dev
 connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
+if db_url.startswith("postgresql"):
+    # ponytail: disable prepared statements for PgBouncer / Supabase transaction pooler (port 6543)
+    connect_args["prepare_threshold"] = None
 
 engine = create_engine(
     db_url,
